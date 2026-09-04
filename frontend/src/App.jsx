@@ -21,6 +21,50 @@ import {
   triggerJudgeDemo
 } from './api';
 
+class TabErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Tab Error Caught by PUNARVAAS ErrorBoundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="bg-[#FFFFFF] border-2 border-[#C13F3F] p-8 rounded shadow-sm text-center my-6 max-w-2xl mx-auto">
+          <div className="w-12 h-12 rounded-full bg-[#C13F3F]/10 text-[#C13F3F] flex items-center justify-center mx-auto mb-3 font-bold text-lg">
+            !
+          </div>
+          <h2 className="text-base font-bold text-[#16232E]">Operations Interface Notice</h2>
+          <p className="text-xs text-[#5C6B76] mt-1.5 mb-4">
+            An unexpected state occurred while rendering this view. Live emergency telemetry and backend algorithms remain fully active.
+          </p>
+          <div className="p-2.5 bg-[#EDF0F2] rounded text-left font-mono text-[11px] text-[#C13F3F] mb-4 overflow-x-auto">
+            {this.state.error?.message || 'Unknown render exception'}
+          </div>
+          <button
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              if (this.props.onReset) this.props.onReset();
+            }}
+            className="px-4 py-2 rounded bg-[#3D5A73] hover:bg-[#16232E] text-white text-xs font-semibold cursor-pointer transition-colors"
+          >
+            Reset Tab View
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('overview');
   const [stats, setStats] = useState(null);
@@ -159,75 +203,77 @@ export default function App() {
 
         {/* Tab Content Viewport */}
         <main className="flex-1 p-6 overflow-y-auto max-h-[calc(100vh-45px)]">
-          {activeTab === 'overview' && (
-            <OverviewTab
-              stats={stats}
-              alerts={alerts}
-              onNavigateTab={setActiveTab}
-              onSelectAlert={(a) => {
-                setSelectedAlert(a);
-                setActiveTab('alerts');
-              }}
-              onTriggerJudgeDemo={handleTriggerJudgeDemo}
-              isJudgeDemoLoading={isJudgeDemoLoading}
-            />
-          )}
+          <TabErrorBoundary onReset={() => setActiveTab('overview')}>
+            {activeTab === 'overview' && (
+              <OverviewTab
+                stats={stats}
+                alerts={alerts}
+                onNavigateTab={setActiveTab}
+                onSelectAlert={(a) => {
+                  setSelectedAlert(a);
+                  setActiveTab('alerts');
+                }}
+                onTriggerJudgeDemo={handleTriggerJudgeDemo}
+                isJudgeDemoLoading={isJudgeDemoLoading}
+              />
+            )}
 
-          {activeTab === 'live_map' && (
-            <LiveMapTab
-              habitations={habitations}
-              selectedHabitation={selectedHabitation}
-              onSelectHabitation={setSelectedHabitation}
-              onCloseDetail={() => setSelectedHabitation(null)}
-              onNavigateTab={setActiveTab}
-            />
-          )}
+            {activeTab === 'live_map' && (
+              <LiveMapTab
+                habitations={habitations}
+                selectedHabitation={selectedHabitation}
+                onSelectHabitation={setSelectedHabitation}
+                onCloseDetail={() => setSelectedHabitation(null)}
+                onNavigateTab={setActiveTab}
+              />
+            )}
 
-          {activeTab === 'alerts' && (
-            <AlertsTab
-              alerts={alerts}
-              selectedAlert={selectedAlert}
-              onSelectAlert={setSelectedAlert}
-              onNavigateTab={setActiveTab}
-              habitations={habitations}
-              onSelectHabitation={(hab) => {
-                setSelectedHabitation(hab);
-                setActiveTab('live_map');
-              }}
-              scenarios={scenarios}
-              activeScenario={activeScenario}
-              onSimulateScenario={handleSimulateScenario}
-              onTriggerJudgeDemo={handleTriggerJudgeDemo}
-              isSimulating={isSimulating}
-              isJudgeDemoLoading={isJudgeDemoLoading}
-            />
-          )}
+            {activeTab === 'alerts' && (
+              <AlertsTab
+                alerts={alerts}
+                selectedAlert={selectedAlert}
+                onSelectAlert={setSelectedAlert}
+                onNavigateTab={setActiveTab}
+                habitations={habitations}
+                onSelectHabitation={(hab) => {
+                  setSelectedHabitation(hab);
+                  setActiveTab('live_map');
+                }}
+                scenarios={scenarios}
+                activeScenario={activeScenario}
+                onSimulateScenario={handleSimulateScenario}
+                onTriggerJudgeDemo={handleTriggerJudgeDemo}
+                isSimulating={isSimulating}
+                isJudgeDemoLoading={isJudgeDemoLoading}
+              />
+            )}
 
-          {activeTab === 'directory' && (
-            <DirectoryTab
-              habitations={habitations}
-              selectedHabitation={selectedHabitation}
-              onSelectHabitation={setSelectedHabitation}
-              onCloseDetail={() => setSelectedHabitation(null)}
-              onNavigateTab={setActiveTab}
-            />
-          )}
+            {activeTab === 'directory' && (
+              <DirectoryTab
+                habitations={habitations}
+                selectedHabitation={selectedHabitation}
+                onSelectHabitation={setSelectedHabitation}
+                onCloseDetail={() => setSelectedHabitation(null)}
+                onNavigateTab={setActiveTab}
+              />
+            )}
 
-          {activeTab === 'capacity' && (
-            <CapacityTab />
-          )}
+            {activeTab === 'capacity' && (
+              <CapacityTab />
+            )}
 
-          {activeTab === 'relocation' && (
-            <RelocationTab habitations={habitations} />
-          )}
+            {activeTab === 'relocation' && (
+              <RelocationTab habitations={habitations} />
+            )}
 
-          {activeTab === 'analytics' && (
-            <AnalyticsTab />
-          )}
+            {activeTab === 'analytics' && (
+              <AnalyticsTab />
+            )}
 
-          {activeTab === 'methodology' && (
-            <MethodologyTab />
-          )}
+            {activeTab === 'methodology' && (
+              <MethodologyTab />
+            )}
+          </TabErrorBoundary>
         </main>
       </div>
     </div>

@@ -190,6 +190,42 @@ def generate_relocation_plan(
                 is_split=is_split
             )
 
+            # Geographic distance and transit corridors
+            hab_lat = hab.get("lat", 0.0)
+            hab_lon = hab.get("lon", 0.0)
+            site_lat = best_site.get("lat", 0.0)
+            site_lon = best_site.get("lon", 0.0)
+            distance_km = compute_haversine_km(hab_lat, hab_lon, site_lat, site_lon) if (hab_lat and site_lat) else 20.0
+
+            # Priority vulnerable demographics breakdown
+            vuln_score = hab.get("vulnerability_score", 0.7) if hab.get("vulnerability_score") else 0.7
+            infants_count = int(round(alloc_headcount * 0.14))
+            elderly_count = int(round(alloc_headcount * 0.11))
+            pregnant_count = int(round(alloc_headcount * 0.04))
+            kutcha_hh = int(round((alloc_headcount / 4.5) * vuln_score))
+            pucca_hh = max(0, int(round(alloc_headcount / 4.5)) - kutcha_hh)
+
+            # NDMA / Sphere Humanitarian Standards relief supplies requisition
+            water_l_day = alloc_headcount * 3
+            food_meals_day = alloc_headcount * 2
+            bio_toilets = max(1, int(math.ceil(alloc_headcount / 20.0)))
+            medical_kits = max(1, int(math.ceil(alloc_headcount / 50.0)))
+            special_care_packs = infants_count + elderly_count + pregnant_count
+
+            # Evacuation highway transit & timeline schedule
+            primary_route = DISTRICT_PRIMARY_ROUTES.get(district, f"Designated all-weather corridor toward {best_site['name']}")
+            buses_50 = max(1, int(math.ceil(alloc_headcount / 50.0)))
+            odraf_trucks = max(1, int(math.ceil(alloc_headcount / 150.0))) + 1
+
+            hazard_lower = hab.get("hazard_type", "").lower()
+            if "flood" in hazard_lower or "cyclone" in hazard_lower or "cloudburst" in hazard_lower:
+                stay_duration = "4–7 Days (Until flood crest / storm surge recedes below Danger Level)"
+            else:
+                stay_duration = "7–14 Days (Until slope geomorphology & slip face stabilize)"
+
+            is_immediate = (hab.get("relocation_urgency_tier") == "IMMEDIATE")
+            departure_window = "Immediate (T-0 to T+4 Hours from Order)" if is_immediate else "Short-Term (T+6 to T+24 Hours)"
+
             allocations.append({
                 "allocation_id": f"ALLOC-{hab_id}-{split_count}",
                 "habitation_id": hab_id,
@@ -207,8 +243,36 @@ def generate_relocation_plan(
                 "site_score": best_score,
                 "site_usable_capacity": best_site["usable_capacity"],
                 "site_remaining_capacity": best_site["remaining_capacity"],
+                "site_access_score": best_site.get("access_score", 8.0),
+                "site_infrastructure_score": best_site.get("infrastructure_score", 8.0),
+                "site_secondary_risk_score": best_site.get("secondary_risk_score", 0.08),
+                "site_notes": best_site.get("notes", ""),
+                "distance_km": distance_km,
                 "is_split": is_split,
-                "explanation": explanation
+                "explanation": explanation,
+                "demographics": {
+                    "infants_children": infants_count,
+                    "elderly_60plus": elderly_count,
+                    "pregnant_women": pregnant_count,
+                    "kutcha_households": kutcha_hh,
+                    "pucca_households": pucca_hh
+                },
+                "relief_supplies": {
+                    "drinking_water_litres_per_day": water_l_day,
+                    "food_packets_per_day": food_meals_day,
+                    "sanitation_bio_toilets": bio_toilets,
+                    "medical_hygiene_kits": medical_kits,
+                    "special_care_packs": special_care_packs,
+                    "standards_basis": "NDMA SOP & Sphere Humanitarian Standards"
+                },
+                "transit_logistics": {
+                    "primary_evacuation_route": primary_route,
+                    "bus_convoy_fleet": buses_50,
+                    "odraf_escort_vehicles": odraf_trucks,
+                    "departure_window": departure_window,
+                    "estimated_residence_duration": stay_duration,
+                    "repatriation_protocol": "Phased green-tag return authorized only after structural safety clearance by District Collectorate & PWD Engineers"
+                }
             })
 
             remaining_to_allocate -= alloc_headcount

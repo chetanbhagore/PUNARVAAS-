@@ -84,11 +84,21 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
     );
   }
 
-  if (!logistics) {
+  if (!logistics || !logistics.relief_supplies || !logistics.evacuation_timeline) {
     return (
       <div className="p-3 bg-[#EDF0F2]/40 rounded border border-[#DDE3E8] text-xs flex items-center justify-between">
-        <span className="font-mono font-bold text-[#16232E]">{habId}</span>
-        <span className="text-[#5C6B76]">{alert.district}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-mono font-bold text-[#16232E]">{habId}</span>
+          <span className="text-[#5C6B76]">{hab?.village || alert.district}</span>
+        </div>
+        {onSelectHabitation && (
+          <button
+            onClick={() => onSelectHabitation(hab)}
+            className="px-2.5 py-1 rounded bg-[#3D5A73] hover:bg-[#16232E] text-white text-[11px] font-semibold transition-colors cursor-pointer"
+          >
+            Pinpoint on Live Map
+          </button>
+        )}
       </div>
     );
   }
@@ -108,7 +118,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
             <span className="text-xs text-[#5C6B76]">· {logistics.district}</span>
           </div>
           <div className="flex items-center flex-wrap gap-2 mt-1.5 text-[11px] text-[#5C6B76]">
-            <span>GPS: <strong className="font-mono text-[#16232E]">{logistics.lat?.toFixed(4)}, {logistics.lon?.toFixed(4)}</strong></span>
+            <span>GPS: <strong className="font-mono text-[#16232E]">{Number(logistics.lat || 0).toFixed(4)}, {Number(logistics.lon || 0).toFixed(4)}</strong></span>
             <span>·</span>
             <span>At-Risk Population: <strong className="text-[#16232E]">{logistics.population_at_risk?.toLocaleString()} evacuees</strong></span>
             <span>·</span>
@@ -187,7 +197,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
               </div>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#3F8F5F]/15 text-[#3F8F5F]">
-                  Suitability: {activeShelter.suitability_score.toFixed(3)}
+                  Suitability: {Number(activeShelter?.suitability_score || 0).toFixed(3)}
                 </span>
                 <span className="text-[11px] font-semibold text-[#16232E]">
                   {activeShelter.distance_km} km away
@@ -230,7 +240,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
               Required Relief Supplies Requisition
             </h5>
           </div>
-          <span className="text-[10px] text-[#5C6B76]">{logistics.relief_supplies.standards_basis}</span>
+          <span className="text-[10px] text-[#5C6B76]">{logistics?.relief_supplies?.standards_basis || 'NDMA / Sphere Standard'}</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
@@ -240,7 +250,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
               <span className="text-[10px] font-semibold uppercase">Drinking Water</span>
             </div>
             <p className="text-sm font-bold text-[#16232E]">
-              {logistics.relief_supplies.drinking_water_litres_per_day?.toLocaleString()} <span className="text-xs font-normal">L/day</span>
+              {logistics?.relief_supplies?.drinking_water_litres_per_day?.toLocaleString() || '0'} <span className="text-xs font-normal">L/day</span>
             </p>
             <span className="text-[10px] text-[#5C6B76]">3.0 Litres/person/day</span>
           </div>
@@ -251,7 +261,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
               <span className="text-[10px] font-semibold uppercase">Food Rations</span>
             </div>
             <p className="text-sm font-bold text-[#16232E]">
-              {logistics.relief_supplies.food_packets_per_day?.toLocaleString()} <span className="text-xs font-normal">meals/day</span>
+              {logistics?.relief_supplies?.food_packets_per_day?.toLocaleString() || '0'} <span className="text-xs font-normal">meals/day</span>
             </p>
             <span className="text-[10px] text-[#5C6B76]">2 cooked meals/day</span>
           </div>
@@ -262,7 +272,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
               <span className="text-[10px] font-semibold uppercase">Bio-Toilets</span>
             </div>
             <p className="text-sm font-bold text-[#16232E]">
-              {logistics.relief_supplies.sanitation_bio_toilets} <span className="text-xs font-normal">units</span>
+              {logistics?.relief_supplies?.sanitation_bio_toilets || 0} <span className="text-xs font-normal">units</span>
             </p>
             <span className="text-[10px] text-[#5C6B76]">1 toilet per 20 persons</span>
           </div>
@@ -273,7 +283,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
               <span className="text-[10px] font-semibold uppercase">Medical / Triage</span>
             </div>
             <p className="text-sm font-bold text-[#16232E]">
-              {logistics.relief_supplies.medical_hygiene_kits} <span className="text-xs font-normal">kits</span>
+              {logistics?.relief_supplies?.medical_hygiene_kits || 0} <span className="text-xs font-normal">kits</span>
             </p>
             <span className="text-[10px] text-[#5C6B76]">ORS & Halazone kits</span>
           </div>
@@ -284,7 +294,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
               <span className="text-[10px] font-semibold uppercase">Special Care</span>
             </div>
             <p className="text-sm font-bold text-[#16232E]">
-              {logistics.relief_supplies.vulnerable_individuals_count} <span className="text-xs font-normal">persons</span>
+              {logistics?.relief_supplies?.vulnerable_individuals_count || 0} <span className="text-xs font-normal">persons</span>
             </p>
             <span className="text-[10px] text-[#5C6B76]">Infants & elderly</span>
           </div>
@@ -307,17 +317,17 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#3D5A73]/70 pb-2">
             <div>
               <span className="text-[10px] text-[#E0B33C] uppercase tracking-wider font-semibold block">Designated Highway Corridor</span>
-              <p className="font-bold text-xs text-white mt-0.5">{logistics.evacuation_timeline.primary_evacuation_route}</p>
-              <p className="text-[11px] text-[#EDF0F2]/70">{logistics.evacuation_timeline.road_condition}</p>
+              <p className="font-bold text-xs text-white mt-0.5">{logistics?.evacuation_timeline?.primary_evacuation_route || 'Designated All-Weather Highway'}</p>
+              <p className="text-[11px] text-[#EDF0F2]/70">{logistics?.evacuation_timeline?.road_condition || 'All-weather paved corridor'}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <div className="bg-[#3D5A73]/60 px-2.5 py-1.5 rounded text-center border border-[#5C6B76]/40">
                 <span className="text-[10px] text-[#EDF0F2]/70 block">Buses Needed</span>
-                <strong className="text-xs text-[#E0B33C]">{logistics.evacuation_timeline.bus_convoy_fleet} (50-Seater)</strong>
+                <strong className="text-xs text-[#E0B33C]">{logistics?.evacuation_timeline?.bus_convoy_fleet || 1} (50-Seater)</strong>
               </div>
               <div className="bg-[#3D5A73]/60 px-2.5 py-1.5 rounded text-center border border-[#5C6B76]/40">
                 <span className="text-[10px] text-[#EDF0F2]/70 block">Escort 4x4</span>
-                <strong className="text-xs text-white">{logistics.evacuation_timeline.odraf_escort_vehicles} Trucks</strong>
+                <strong className="text-xs text-white">{logistics?.evacuation_timeline?.odraf_escort_vehicles || 2} Trucks</strong>
               </div>
             </div>
           </div>
@@ -329,7 +339,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
                 <span className="text-[10px] font-bold uppercase">Departure Window</span>
               </div>
               <p className="font-semibold text-white text-[11px] leading-tight">
-                {logistics.evacuation_timeline.departure_window}
+                {logistics?.evacuation_timeline?.departure_window || 'T-0 to T+4 Hours'}
               </p>
             </div>
 
@@ -339,7 +349,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
                 <span className="text-[10px] font-bold uppercase">Residence Duration</span>
               </div>
               <p className="font-semibold text-white text-[11px] leading-tight">
-                {logistics.evacuation_timeline.estimated_residence_duration}
+                {logistics?.evacuation_timeline?.estimated_residence_duration || 'Approx. 4 to 7 Days'}
               </p>
             </div>
 
@@ -349,7 +359,7 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
                 <span className="text-[10px] font-bold uppercase">Re-Entry Protocol</span>
               </div>
               <p className="text-[#EDF0F2]/80 text-[11px] leading-tight">
-                {logistics.evacuation_timeline.repatriation_protocol}
+                {logistics?.evacuation_timeline?.repatriation_protocol || 'Staged safe return upon formal clearance'}
               </p>
             </div>
           </div>
@@ -373,6 +383,7 @@ export default function AlertsTab({
   isSimulating,
   isJudgeDemoLoading
 }) {
+  const [expandedAlertId, setExpandedAlertId] = useState(null);
   const [severityFilter, setSeverityFilter] = useState('ALL');
   const [districtFilter, setDistrictFilter] = useState('ALL');
   const [hazardFilter, setHazardFilter] = useState('ALL');
@@ -388,7 +399,7 @@ export default function AlertsTab({
 
   // Sync expanded card if selectedAlert changes
   React.useEffect(() => {
-    if (selectedAlert) {
+    if (selectedAlert?.alert_id) {
       setExpandedAlertId(selectedAlert.alert_id);
     }
   }, [selectedAlert]);
