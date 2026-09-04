@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-base-ink: #16232E;
+  --color-app-bg: #EDF0F2;
+  --color-card-bg: #FFFFFF;
+  --color-card-border: #DDE3E8;
+  --color-muted-accent: #3D5A73;
+  --color-secondary-text: #5C6B76;
+  
+  /* Severity tokens - strictly for zone & alert markers */
+  --color-severity-red: #C13F3F;
+  --color-severity-orange: #D97A2E;
+  --color-severity-yellow: #E0B33C;
+  --color-severity-green: #3F8F5F;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-app-bg);
+  color: var(--color-base-ink);
+  font-family: 'IBM Plex Sans', Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar for information-dense dashboard */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #EDF0F2;
+}
+::-webkit-scrollbar-thumb {
+  background: #B0BCC5;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8A9CA8;
+}
+
+/* Leaflet map overrides */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background-color: #E2E7EA;
+  font-family: inherit;
+}
+
+/* Marker clustering & custom pulse */
+.custom-marker-pin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.custom-marker-pin.pulse-red {
+  animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(193, 63, 63, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(193, 63, 63, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(193, 63, 63, 0); }
+}
