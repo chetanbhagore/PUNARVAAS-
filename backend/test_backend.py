@@ -62,9 +62,60 @@ def test_judge_demo_mode():
     assert "Composite risk score:" in lead["message"]
     print(f"PASS: Judge Demo Mode verified. Generated {len(red_alerts)} RED alerts. Lead message: {lead['message'][:60]}...")
 
+from relocation_engine import generate_relocation_plan
+
+def test_relocation_mechanism():
+    safe_sites = get_safe_sites()
+    assert 8 <= len(safe_sites) <= 15, f"Expected 8-15 safe sites, got {len(safe_sites)}"
+
+    # Verify site schemas
+    for s in safe_sites:
+        assert "usable_capacity" in s and s["usable_capacity"] > 0
+        assert "access_score" in s and 0 <= s["access_score"] <= 10
+        assert "infrastructure_score" in s and 0 <= s["infrastructure_score"] <= 10
+        assert "secondary_risk_score" in s and 0 <= s["secondary_risk_score"] <= 1.0
+        assert "notes" in s
+
+    habs = get_all_habitations()
+    plan = generate_relocation_plan(habs, safe_sites)
+
+    summary = plan["summary"]
+    allocations = plan["allocations"]
+    ranked_sites = plan["ranked_sites"]
+
+    assert summary["total_evacuees_needed"] > 0
+    assert summary["total_evacuees_allocated"] > 0
+    assert summary["total_sites_available"] == len(safe_sites)
+    assert summary["immediate_habitations_count"] > 0
+
+    # Ensure no site is over-allocated
+    site_alloc_map = {}
+    for a in allocations:
+        assert a["allocated_headcount"] > 0
+        assert a["explanation"] and len(a["explanation"]) > 20
+        assert a["urgency_tier"] in ("IMMEDIATE", "SHORT_TERM")
+        site_alloc_map[a["site_id"]] = site_alloc_map.get(a["site_id"], 0) + a["allocated_headcount"]
+
+    for s in safe_sites:
+        allocated = site_alloc_map.get(s["site_id"], 0)
+        assert allocated <= s["usable_capacity"], f"Site {s['site_id']} over-allocated: {allocated} > {s['usable_capacity']}"
+
+    # Check that IMMEDIATE habitations appear first in allocations list
+    immediate_seen = False
+    short_term_seen_after_immediate = False
+    for a in allocations:
+        if a["urgency_tier"] == "IMMEDIATE":
+            immediate_seen = True
+            assert not short_term_seen_after_immediate, "Found IMMEDIATE allocation after SHORT_TERM allocation"
+        elif a["urgency_tier"] == "SHORT_TERM":
+            short_term_seen_after_immediate = True
+
+    print(f"PASS: Relocation Engine verified. {summary['total_evacuees_allocated']:,} evacuees allocated across {summary['sites_utilized_count']} sites.")
+
 if __name__ == "__main__":
     test_habitations_and_hazards()
     test_ml_model()
     test_per_hazard_formulas()
     test_judge_demo_mode()
+    test_relocation_mechanism()
     print("ALL BACKEND TESTS PASSED SUCCESSFULLY!")

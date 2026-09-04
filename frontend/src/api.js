@@ -95,3 +95,9 @@ export async function fetchAnalytics() {
   if (!res.ok) throw new Error('Failed to fetch analytics');
   return res.json();
 }
+
+export async function fetchRelocationPlan() {
+  const res = await fetch(`${API_BASE}/relocation/plan`);
+  if (!res.ok) throw new Error('Failed to fetch relocation plan');
+  return res.json();
+}

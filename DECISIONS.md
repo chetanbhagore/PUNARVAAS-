@@ -59,13 +59,14 @@ This document logs every key architectural, design, and algorithmic decision mad
 
 ---
 
-## Decision 6: Scope Guarding on Relocation Planning (Scaffold Only)
-- **Context**: Team instructions specified that another sub-team is finalizing relocation-site optimization algorithms.
-- **Alternatives Considered**: Inventing automated transport routing, distance ranking, or shelter allocation algorithms.
-- **Decision**: Strictly presented a clean table of habitations with pre-computed `relocation_urgency_tier` and a visible banner: *"Detailed relocation-site recommendation and sequencing logic — in progress."*
+## Decision 6: Explainable Relocation Engine with Human-in-the-Loop Sign-Off
+- **Context**: Operational decision support for pairing high-urgency settlements (Immediate & Short-Term) with certified regional safe shelters under hard capacity limits.
+- **Alternatives Considered**: Autonomous unconstrained routing, black-box linear programming solvers, or static unlinked tables.
+- **Decision**: Implemented a pure, deterministic multi-criteria allocation engine (`relocation_engine.py`) combined with a human-in-the-loop sign-off interface in `RelocationTab.jsx`.
 - **Why**:
-  - **Prevents Divergence**: Preserves architectural integrity and prevents conflicts with the companion team's mathematical model.
-  - **Human-in-the-Loop Philosophy**: Autonomous relocation assignment without field survey verification violates NDMA protocols.
+  - **30-Second Explainability**: Scoring breaks down into 4 transparent, auditable factors: 35% Capacity Fit, 25% Road Access, 25% Infrastructure Readiness, and 15% Secondary Threat Safety, with an intra-district administrative preference multiplier.
+  - **Capacity Safeguards**: Prevents shelter overcrowding by strictly bounding allocations by each shelter's certified usable capacity, gracefully splitting overflow to next-best candidate sites and alerting on residual deficits.
+  - **Accountability**: In accordance with NDMA protocols, algorithms advise rather than mandate; every relocation order must receive explicit human official approval before CSV field dispatch orders are generated.
 
 ---
 

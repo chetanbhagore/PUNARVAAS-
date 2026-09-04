@@ -149,6 +149,44 @@ backend/
 
 ### Key Python Module Responsibilities
 - `risk_engine.py`: Defines pure mathematical functions (`compute_landslide_trigger`, `compute_flood_trigger`, `compute_cyclone_trigger`, `compute_composite_risk`) with zero side effects.
+- `relocation_engine.py`: Implements pure multi-criteria site scoring, capacity-constrained allocation, and deterministic explanation generation for shelter assignments.
 - `ml_model.py`: Manages model serialization (`model.pkl`), computes global feature importance percentages, and performs real-time single-instance inference.
 - `scenarios.py`: Orchestrates pre-cached scenario state transitions (e.g. Baitarani river flood escalation) ensuring repeatable judge demonstrations.
-- `main.py`: Exposes REST endpoints (`/api/stats`, `/api/habitations`, `/api/alerts`, `/api/capacity`, `/api/scenarios/judge-demo`).
+- `database.py`: SQLite schema, migration, and CRUD queries for habitations, safe sites, alerts, and system state.
+- `main.py`: Exposes REST endpoints (`/api/stats`, `/api/habitations`, `/api/alerts`, `/api/capacity`, `/api/relocation/plan`, `/api/scenarios/judge-demo`).
+
+---
+
+## 5. Explainable Relocation Mechanism & Capacity-Constrained Allocation Engine
+
+### 5.1 Multi-Criteria Site Suitability Scoring Formula
+For any candidate safe shelter $s$ evaluated for a village $h$ with remaining unallocated evacuee headcount $P_h^{\text{rem}}$, the suitability score $S(s, h) \in [0.0, 1.0]$ is computed deterministically:
+
+$$S(s, h) = \left[ 0.35 \cdot \text{Fit}(s, h) + 0.25 \cdot \frac{A_s}{10.0} + 0.25 \cdot \frac{I_s}{10.0} + 0.15 \cdot (1.0 - R_s^{\text{sec}}) \right] \times \mu_{\text{district}}$$
+
+Where:
+- $\text{Fit}(s, h) = \min\left(1.0, \frac{C_s^{\text{rem}}}{P_h^{\text{rem}}}\right)$ measures capacity adequacy without overflow.
+- $A_s \in [0.0, 10.0]$ is certified all-weather road access and clearance for emergency evacuation buses.
+- $I_s \in [0.0, 10.0]$ is infrastructure readiness (potable water storage, diesel backup generators, sanitation, and medical triage berths).
+- $R_s^{\text{sec}} \in [0.0, 1.0]$ is secondary disaster threat susceptibility (inundation or slope instability).
+- $\mu_{\text{district}}$ is the administrative affinity multiplier:
+  $$\mu_{\text{district}} = \begin{cases} 1.00 & \text{if } \text{District}(s) = \text{District}(h) \text{ (Intra-district)} \\ 0.85 & \text{if } \text{District}(s) \neq \text{District}(h) \text{ (Inter-district fallback)} \end{cases}$$
+
+### 5.2 Greedy Capacity-Constrained Allocation Algorithm
+1. **Filter Priority Target Habitations**: Habitations with `relocation_urgency_tier` in `{"IMMEDIATE", "SHORT_TERM"}`.
+2. **Prioritization Order**:
+   - Primary: Urgency Tier (`IMMEDIATE` strictly ahead of `SHORT_TERM`).
+   - Secondary: Composite risk score $R_i$ descending.
+   - Tertiary: Total settlement population descending.
+3. **Capacity Allocation Loop**:
+   - For each habitation needing relocation of $P_h^{\text{rem}}$ people:
+     - Identify candidate shelters where remaining capacity $C_s^{\text{rem}} > 0$.
+     - Prefer intra-district shelters; if exhausted, evaluate inter-district shelters.
+     - Compute $S(s, h)$ for all candidates and pick the highest-scoring shelter $s^*$.
+     - Allocate $\Delta P = \min(P_h^{\text{rem}}, C_{s^*}^{\text{rem}})$.
+     - Update shelter remaining capacity: $C_{s^*}^{\text{rem}} \leftarrow C_{s^*}^{\text{rem}} - \Delta P$.
+     - If $P_h^{\text{rem}} > \Delta P$, perform split allocation and assign remaining population to the next best shelter.
+4. **Deterministic Audit Trail**:
+   - For every allocation, generate a legally auditable explanation string stating village name, urgency tier, assigned shelter name, jurisdiction type, exact metric breakdown, and post-allocation shelter headroom.
+5. **Human-in-the-Loop Approval**:
+   - Final field deployment requires explicit sign-off by the designated District Magistrate or SDMA commanding officer.

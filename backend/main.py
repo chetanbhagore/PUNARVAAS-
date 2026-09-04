@@ -24,6 +24,7 @@ from database import (
 from seed import seed_data
 from scenarios import SCENARIO_METADATA, apply_scenario
 from ml_model import ml_engine
+from relocation_engine import generate_relocation_plan
 
 app = FastAPI(
     title="PUNARVAAS API",
@@ -209,6 +210,12 @@ def get_carrying_capacity():
         "districts_capacity": result,
         "banner_note": "Capacity methodology is PUNARVAAS's own transparent formula, not an official NDMA standard"
     }
+
+@app.get("/api/relocation/plan")
+def get_relocation_plan():
+    habitations = get_all_habitations()
+    safe_sites = get_safe_sites()
+    return generate_relocation_plan(habitations, safe_sites)
 
 @app.get("/api/scenarios")
 def list_scenarios():

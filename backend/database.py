@@ -61,13 +61,41 @@ def init_db():
         site_id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         district TEXT NOT NULL,
+        usable_capacity INTEGER NOT NULL,
         capacity_persons INTEGER NOT NULL,
         lat REAL NOT NULL,
         lon REAL NOT NULL,
+        access_score REAL NOT NULL,
+        infrastructure_score REAL NOT NULL,
+        secondary_risk_score REAL NOT NULL,
         distance_from_district_centroid_km REAL NOT NULL,
-        shelter_type TEXT NOT NULL
+        shelter_type TEXT NOT NULL,
+        notes TEXT NOT NULL
     )
     """)
+
+    # Auto-migrate if existing table lacked new relocation columns
+    cursor.execute("PRAGMA table_info(safe_sites)")
+    cols = [col[1] for col in cursor.fetchall()]
+    if cols and "usable_capacity" not in cols:
+        cursor.execute("DROP TABLE safe_sites")
+        cursor.execute("""
+        CREATE TABLE safe_sites (
+            site_id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            district TEXT NOT NULL,
+            usable_capacity INTEGER NOT NULL,
+            capacity_persons INTEGER NOT NULL,
+            lat REAL NOT NULL,
+            lon REAL NOT NULL,
+            access_score REAL NOT NULL,
+            infrastructure_score REAL NOT NULL,
+            secondary_risk_score REAL NOT NULL,
+            distance_from_district_centroid_km REAL NOT NULL,
+            shelter_type TEXT NOT NULL,
+            notes TEXT NOT NULL
+        )
+        """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS system_state (
@@ -170,20 +198,27 @@ def save_safe_sites(sites: List[Dict[str, Any]]):
     cursor = conn.cursor()
     cursor.execute("DELETE FROM safe_sites")
     for s in sites:
+        usable_cap = s.get("usable_capacity", s.get("capacity_persons", 0))
         cursor.execute("""
         INSERT INTO safe_sites (
-            site_id, name, district, capacity_persons, lat, lon,
-            distance_from_district_centroid_km, shelter_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            site_id, name, district, usable_capacity, capacity_persons, lat, lon,
+            access_score, infrastructure_score, secondary_risk_score,
+            distance_from_district_centroid_km, shelter_type, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             s["site_id"],
             s["name"],
             s["district"],
-            s["capacity_persons"],
+            usable_cap,
+            usable_cap,
             s["lat"],
             s["lon"],
-            s["distance_from_district_centroid_km"],
-            s["shelter_type"]
+            float(s.get("access_score", 8.0)),
+            float(s.get("infrastructure_score", 8.0)),
+            float(s.get("secondary_risk_score", 0.1)),
+            float(s.get("distance_from_district_centroid_km", 20.0)),
+            s.get("shelter_type", "Standard Shelter"),
+            s.get("notes", "")
         ))
     conn.commit()
     conn.close()

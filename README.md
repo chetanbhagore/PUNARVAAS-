@@ -43,7 +43,12 @@ The system classifies settlements into **Red, Orange, Yellow, and Green zones**,
   - Exposes top contributing features and model coefficients.
 - **Habitation Directory**: Searchable, sortable registry of all monitored settlements with pagination.
 - **Carrying Capacity Scaffold**: Compares at-risk populations with certified shelter capacity, featuring a transparent disclaimer banner.
-- **Relocation Planning Placeholder**: Displays pre-computed urgency tiers (`IMMEDIATE`, `SHORT_TERM`, `MEDIUM_TERM`, `MONITOR`) with a strict notice that site-ranking formulas are in progress.
+- **Explainable Relocation Decision Support & Capacity Allocation Engine**:
+  - Multi-criteria greedy allocation matching high-urgency settlements (`IMMEDIATE` and `SHORT_TERM`) with 12 certified multipurpose safe shelters across Odisha pilot districts.
+  - Transparent scoring breakdown: 35% Capacity Fit + 25% Road Access + 25% Infrastructure Readiness + 15% Secondary Threat Safety (with intra-district preference).
+  - Hard capacity safeguards preventing shelter overcrowding, automatic split allocations for large settlements, and residual evacuation deficit tracking.
+  - Deterministic, legally auditable rationale generation for District Magistrates and SDMA officers.
+  - Human-in-the-loop sign-off workflow and one-click CSV Relocation Order export for field administration.
 - **Methodology & Provenance**: Mathematical formulations, operational thresholds, and backtest case studies (Darjeeling, Dikhow, Dharali, Cyclone Fani).
 
 ---
