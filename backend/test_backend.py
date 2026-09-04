@@ -62,7 +62,7 @@ def test_judge_demo_mode():
     assert "Composite risk score:" in lead["message"]
     print(f"PASS: Judge Demo Mode verified. Generated {len(red_alerts)} RED alerts. Lead message: {lead['message'][:60]}...")
 
-from relocation_engine import generate_relocation_plan
+from relocation_engine import generate_relocation_plan, get_habitation_relocation_logistics
 
 def test_relocation_mechanism():
     safe_sites = get_safe_sites()
@@ -98,7 +98,16 @@ def test_relocation_mechanism():
 
     for s in safe_sites:
         allocated = site_alloc_map.get(s["site_id"], 0)
-        assert allocated <= s["usable_capacity"], f"Site {s['site_id']} over-allocated: {allocated} > {s['usable_capacity']}"
+        assert allocated <= s["usable_capacity"], f"Capacity breach at {s['name']}: {allocated} > {s['usable_capacity']}"
+
+    # Verify single-habitation multi-shelter recommendations and relief logistics
+    sample_hab = habs[0]
+    rec = get_habitation_relocation_logistics(sample_hab, safe_sites)
+    assert len(rec["candidate_shelters"]) > 0
+    assert "drinking_water_litres_per_day" in rec["relief_supplies"]
+    assert "primary_evacuation_route" in rec["evacuation_timeline"]
+    assert "departure_window" in rec["evacuation_timeline"]
+    assert rec["relief_supplies"]["food_packets_per_day"] > 0
 
     # Check that IMMEDIATE habitations appear first in allocations list
     immediate_seen = False

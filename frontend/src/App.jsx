@@ -189,6 +189,11 @@ export default function App() {
               selectedAlert={selectedAlert}
               onSelectAlert={setSelectedAlert}
               onNavigateTab={setActiveTab}
+              habitations={habitations}
+              onSelectHabitation={(hab) => {
+                setSelectedHabitation(hab);
+                setActiveTab('live_map');
+              }}
               scenarios={scenarios}
               activeScenario={activeScenario}
               onSimulateScenario={handleSimulateScenario}

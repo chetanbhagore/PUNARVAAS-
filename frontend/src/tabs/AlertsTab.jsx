@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   BellRing,
   AlertTriangle,
@@ -12,14 +12,26 @@ import {
   Compass,
   Calendar,
   Building,
+  Building2,
   ChevronDown,
   ChevronUp,
   Waves,
   Wind,
   Mountain,
-  CloudRain
+  CloudRain,
+  MapPin,
+  Navigation,
+  Truck,
+  Clock,
+  Droplets,
+  Utensils,
+  ShieldCheck,
+  Activity,
+  Users,
+  ArrowUpRight
 } from 'lucide-react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { fetchHabitationLogistics } from '../api';
 
 const SEVERITY_BORDER = {
   RED: 'border-l-4 border-[#C13F3F]',
@@ -40,11 +52,320 @@ const HAZARD_ICONS = {
   cloudburst: CloudRain
 };
 
+function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitation }) {
+  const hab = habitationsMap[habId] || { habitation_id: habId, village: habId, district: alert.district };
+  const [logistics, setLogistics] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedShelterIdx, setSelectedShelterIdx] = useState(0);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    fetchHabitationLogistics(habId)
+      .then((data) => {
+        if (isMounted) {
+          setLogistics(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load logistics for', habId, err);
+        if (isMounted) setLoading(false);
+      });
+    return () => { isMounted = false; };
+  }, [habId]);
+
+  if (loading) {
+    return (
+      <div className="p-3 bg-[#EDF0F2]/60 rounded border border-[#DDE3E8] text-xs text-[#5C6B76] animate-pulse flex items-center justify-between">
+        <span className="font-mono font-bold text-[#16232E]">{habId}</span>
+        <span>Evaluating nearest candidate shelters, highway corridors & relief supply logistics...</span>
+      </div>
+    );
+  }
+
+  if (!logistics) {
+    return (
+      <div className="p-3 bg-[#EDF0F2]/40 rounded border border-[#DDE3E8] text-xs flex items-center justify-between">
+        <span className="font-mono font-bold text-[#16232E]">{habId}</span>
+        <span className="text-[#5C6B76]">{alert.district}</span>
+      </div>
+    );
+  }
+
+  const activeShelter = logistics.candidate_shelters?.[selectedShelterIdx] || logistics.candidate_shelters?.[0];
+
+  return (
+    <div className="bg-[#FFFFFF] border border-[#DDE3E8] rounded p-4 shadow-sm space-y-4">
+      {/* 1. Location Header & Live Map Jump */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#DDE3E8] pb-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#16232E] text-white">
+              {logistics.habitation_id}
+            </span>
+            <h4 className="text-sm font-bold text-[#16232E]">{logistics.village}</h4>
+            <span className="text-xs text-[#5C6B76]">· {logistics.district}</span>
+          </div>
+          <div className="flex items-center flex-wrap gap-2 mt-1.5 text-[11px] text-[#5C6B76]">
+            <span>GPS: <strong className="font-mono text-[#16232E]">{logistics.lat?.toFixed(4)}, {logistics.lon?.toFixed(4)}</strong></span>
+            <span>·</span>
+            <span>At-Risk Population: <strong className="text-[#16232E]">{logistics.population_at_risk?.toLocaleString()} evacuees</strong></span>
+            <span>·</span>
+            <span className="font-semibold text-[#C13F3F]">Tier: {logistics.urgency_tier}</span>
+          </div>
+        </div>
+
+        {onSelectHabitation && (
+          <button
+            onClick={() => onSelectHabitation(hab)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#16232E] hover:bg-[#3D5A73] text-white text-xs font-semibold cursor-pointer transition-colors shadow-sm shrink-0 self-start sm:self-center"
+            title="Jump to GIS Live Map with this village and its evacuation corridor focused"
+          >
+            <MapPin className="w-3.5 h-3.5 text-[#E0B33C]" />
+            <span>Pinpoint on Live Map</span>
+            <ArrowUpRight className="w-3 h-3 opacity-70" />
+          </button>
+        )}
+      </div>
+
+      {/* 2. Candidate Shelters Comparison ("Recommend More Places") */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Building2 className="w-4 h-4 text-[#3D5A73]" />
+            <h5 className="text-xs font-bold uppercase tracking-wider text-[#16232E]">
+              Nearest Candidate Safe Shelters ({logistics.candidate_shelters?.length || 0} Evaluated)
+            </h5>
+          </div>
+          <span className="text-[10px] text-[#5C6B76]">Ranked by proximity, road viability & capacity headroom</span>
+        </div>
+
+        {/* Shelter Switcher Tabs */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          {logistics.candidate_shelters?.map((shelter, idx) => {
+            const isSelected = selectedShelterIdx === idx;
+            return (
+              <button
+                key={shelter.site_id}
+                type="button"
+                onClick={() => setSelectedShelterIdx(idx)}
+                className={`p-2.5 rounded border text-left cursor-pointer transition-all ${
+                  isSelected
+                    ? 'bg-[#16232E] text-white border-[#16232E] shadow-sm'
+                    : 'bg-[#EDF0F2]/50 hover:bg-[#EDF0F2] text-[#16232E] border-[#DDE3E8]'
+                }`}
+              >
+                <div className="flex items-center justify-between text-[10px] mb-1">
+                  <span className={`px-1.5 py-0.2 rounded font-bold ${
+                    isSelected
+                      ? 'bg-white/20 text-[#E0B33C]'
+                      : shelter.is_primary ? 'bg-[#3F8F5F]/20 text-[#3F8F5F]' : 'bg-[#5C6B76]/20 text-[#5C6B76]'
+                  }`}>
+                    {shelter.recommendation_tier}
+                  </span>
+                  <span className={isSelected ? 'text-white/80 font-mono' : 'text-[#5C6B76] font-mono'}>
+                    {shelter.distance_km} km
+                  </span>
+                </div>
+                <p className="text-xs font-bold truncate">{shelter.name}</p>
+                <p className={`text-[10px] truncate mt-0.5 ${isSelected ? 'text-white/70' : 'text-[#5C6B76]'}`}>
+                  Cap: {shelter.usable_capacity?.toLocaleString()} · Access: {shelter.access_score}/10
+                </p>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected Candidate Detailed Inspection Card */}
+        {activeShelter && (
+          <div className="bg-[#EDF0F2]/40 rounded p-3 border border-[#DDE3E8] text-xs space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-[#DDE3E8] pb-1.5">
+              <div>
+                <span className="font-bold text-[#16232E]">{activeShelter.name}</span>
+                <span className="text-[#5C6B76] ml-2">({activeShelter.district} · {activeShelter.site_id})</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#3F8F5F]/15 text-[#3F8F5F]">
+                  Suitability: {activeShelter.suitability_score.toFixed(3)}
+                </span>
+                <span className="text-[11px] font-semibold text-[#16232E]">
+                  {activeShelter.distance_km} km away
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-[#16232E]/80 leading-relaxed">
+              {activeShelter.notes}
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px]">
+              <div className="bg-white p-2 rounded border border-[#DDE3E8]">
+                <span className="text-[#5C6B76] block text-[10px]">Usable Capacity</span>
+                <strong className="text-[#16232E]">{activeShelter.usable_capacity?.toLocaleString()} persons</strong>
+              </div>
+              <div className="bg-white p-2 rounded border border-[#DDE3E8]">
+                <span className="text-[#5C6B76] block text-[10px]">Road Access Score</span>
+                <strong className="text-[#16232E]">{activeShelter.access_score} / 10</strong>
+              </div>
+              <div className="bg-white p-2 rounded border border-[#DDE3E8]">
+                <span className="text-[#5C6B76] block text-[10px]">Infrastructure Ready</span>
+                <strong className="text-[#16232E]">{activeShelter.infrastructure_score} / 10</strong>
+              </div>
+              <div className="bg-white p-2 rounded border border-[#DDE3E8]">
+                <span className="text-[#5C6B76] block text-[10px]">Secondary Hazard</span>
+                <strong className="text-[#3F8F5F]">{activeShelter.secondary_risk_score} (Safe Ground)</strong>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 3. Humanitarian Relief Supplies Calculator */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Utensils className="w-4 h-4 text-[#D97A2E]" />
+            <h5 className="text-xs font-bold uppercase tracking-wider text-[#16232E]">
+              Required Relief Supplies Requisition
+            </h5>
+          </div>
+          <span className="text-[10px] text-[#5C6B76]">{logistics.relief_supplies.standards_basis}</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+          <div className="bg-[#EDF0F2]/50 p-2.5 rounded border border-[#DDE3E8]">
+            <div className="flex items-center gap-1 text-[#3D5A73] mb-1">
+              <Droplets className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold uppercase">Drinking Water</span>
+            </div>
+            <p className="text-sm font-bold text-[#16232E]">
+              {logistics.relief_supplies.drinking_water_litres_per_day?.toLocaleString()} <span className="text-xs font-normal">L/day</span>
+            </p>
+            <span className="text-[10px] text-[#5C6B76]">3.0 Litres/person/day</span>
+          </div>
+
+          <div className="bg-[#EDF0F2]/50 p-2.5 rounded border border-[#DDE3E8]">
+            <div className="flex items-center gap-1 text-[#D97A2E] mb-1">
+              <Utensils className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold uppercase">Food Rations</span>
+            </div>
+            <p className="text-sm font-bold text-[#16232E]">
+              {logistics.relief_supplies.food_packets_per_day?.toLocaleString()} <span className="text-xs font-normal">meals/day</span>
+            </p>
+            <span className="text-[10px] text-[#5C6B76]">2 cooked meals/day</span>
+          </div>
+
+          <div className="bg-[#EDF0F2]/50 p-2.5 rounded border border-[#DDE3E8]">
+            <div className="flex items-center gap-1 text-[#3F8F5F] mb-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold uppercase">Bio-Toilets</span>
+            </div>
+            <p className="text-sm font-bold text-[#16232E]">
+              {logistics.relief_supplies.sanitation_bio_toilets} <span className="text-xs font-normal">units</span>
+            </p>
+            <span className="text-[10px] text-[#5C6B76]">1 toilet per 20 persons</span>
+          </div>
+
+          <div className="bg-[#EDF0F2]/50 p-2.5 rounded border border-[#DDE3E8]">
+            <div className="flex items-center gap-1 text-[#C13F3F] mb-1">
+              <Activity className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold uppercase">Medical / Triage</span>
+            </div>
+            <p className="text-sm font-bold text-[#16232E]">
+              {logistics.relief_supplies.medical_hygiene_kits} <span className="text-xs font-normal">kits</span>
+            </p>
+            <span className="text-[10px] text-[#5C6B76]">ORS & Halazone kits</span>
+          </div>
+
+          <div className="bg-[#EDF0F2]/50 p-2.5 rounded border border-[#DDE3E8] col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-1 text-[#16232E] mb-1">
+              <Users className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold uppercase">Special Care</span>
+            </div>
+            <p className="text-sm font-bold text-[#16232E]">
+              {logistics.relief_supplies.vulnerable_individuals_count} <span className="text-xs font-normal">persons</span>
+            </p>
+            <span className="text-[10px] text-[#5C6B76]">Infants & elderly</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Evacuation Transit Route & Approximate Timeline Window */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Navigation className="w-4 h-4 text-[#3D5A73]" />
+            <h5 className="text-xs font-bold uppercase tracking-wider text-[#16232E]">
+              Evacuation Transit Corridor & Timeline Schedule
+            </h5>
+          </div>
+          <span className="text-[10px] text-[#5C6B76]">Operational dispatch logistics</span>
+        </div>
+
+        <div className="bg-[#16232E] text-white p-3.5 rounded border border-[#3D5A73] space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#3D5A73]/70 pb-2">
+            <div>
+              <span className="text-[10px] text-[#E0B33C] uppercase tracking-wider font-semibold block">Designated Highway Corridor</span>
+              <p className="font-bold text-xs text-white mt-0.5">{logistics.evacuation_timeline.primary_evacuation_route}</p>
+              <p className="text-[11px] text-[#EDF0F2]/70">{logistics.evacuation_timeline.road_condition}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="bg-[#3D5A73]/60 px-2.5 py-1.5 rounded text-center border border-[#5C6B76]/40">
+                <span className="text-[10px] text-[#EDF0F2]/70 block">Buses Needed</span>
+                <strong className="text-xs text-[#E0B33C]">{logistics.evacuation_timeline.bus_convoy_fleet} (50-Seater)</strong>
+              </div>
+              <div className="bg-[#3D5A73]/60 px-2.5 py-1.5 rounded text-center border border-[#5C6B76]/40">
+                <span className="text-[10px] text-[#EDF0F2]/70 block">Escort 4x4</span>
+                <strong className="text-xs text-white">{logistics.evacuation_timeline.odraf_escort_vehicles} Trucks</strong>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div>
+              <div className="flex items-center gap-1 text-[#E0B33C] mb-1">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase">Departure Window</span>
+              </div>
+              <p className="font-semibold text-white text-[11px] leading-tight">
+                {logistics.evacuation_timeline.departure_window}
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-1 text-[#3F8F5F] mb-1">
+                <Calendar className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase">Residence Duration</span>
+              </div>
+              <p className="font-semibold text-white text-[11px] leading-tight">
+                {logistics.evacuation_timeline.estimated_residence_duration}
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-1 text-[#EDF0F2]/70 mb-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#3F8F5F]" />
+                <span className="text-[10px] font-bold uppercase">Re-Entry Protocol</span>
+              </div>
+              <p className="text-[#EDF0F2]/80 text-[11px] leading-tight">
+                {logistics.evacuation_timeline.repatriation_protocol}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AlertsTab({
   alerts,
   selectedAlert,
   onSelectAlert,
   onNavigateTab,
+  habitations = [],
+  onSelectHabitation,
   scenarios,
   activeScenario,
   onSimulateScenario,
@@ -55,8 +376,15 @@ export default function AlertsTab({
   const [severityFilter, setSeverityFilter] = useState('ALL');
   const [districtFilter, setDistrictFilter] = useState('ALL');
   const [hazardFilter, setHazardFilter] = useState('ALL');
-  const [expandedAlertId, setExpandedAlertId] = useState(selectedAlert?.alert_id || null);
   const [historySearch, setHistorySearch] = useState('');
+
+  const habitationsMap = useMemo(() => {
+    const map = {};
+    (habitations || []).forEach((h) => {
+      map[h.habitation_id] = h;
+    });
+    return map;
+  }, [habitations]);
 
   // Sync expanded card if selectedAlert changes
   React.useEffect(() => {
@@ -379,17 +707,31 @@ export default function AlertsTab({
                       </p>
                     </div>
 
-                    {/* Affected Habitations Table */}
-                    <div className="bg-[#FFFFFF] p-3.5 rounded border border-[#DDE3E8]">
-                      <h4 className="text-xs font-bold text-[#16232E] mb-2">
-                        Affected Habitations ({alert.habitation_ids?.length || 1})
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {/* Affected Habitations Location, Multi-Shelter & Logistics Intelligence */}
+                    <div className="space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-[#DDE3E8] pb-2">
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-[#16232E]">
+                            Operational Evacuation Logistics & Habitations ({alert.habitation_ids?.length || 1})
+                          </h4>
+                          <p className="text-[11px] text-[#5C6B76]">
+                            Candidate safe havens comparison, humanitarian relief requisitions & highway transit schedule
+                          </p>
+                        </div>
+                        <span className="text-[10px] text-[#3D5A73] font-semibold bg-[#3D5A73]/10 px-2 py-0.5 rounded shrink-0 self-start sm:self-center">
+                          NDMA Operations Standard
+                        </span>
+                      </div>
+
+                      <div className="space-y-4">
                         {(alert.habitation_ids || []).map((id) => (
-                          <div key={id} className="p-2 bg-[#EDF0F2]/50 rounded border border-[#DDE3E8] text-xs flex items-center justify-between">
-                            <span className="font-mono font-medium text-[#16232E]">{id}</span>
-                            <span className="text-[11px] text-[#5C6B76]">{alert.district}</span>
-                          </div>
+                          <HabitationLogisticsCard
+                            key={id}
+                            habId={id}
+                            alert={alert}
+                            habitationsMap={habitationsMap}
+                            onSelectHabitation={onSelectHabitation}
+                          />
                         ))}
                       </div>
                     </div>

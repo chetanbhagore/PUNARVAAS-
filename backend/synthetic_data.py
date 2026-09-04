@@ -314,6 +314,53 @@ SAFE_SITES_SEED = [
         "distance_from_district_centroid_km": 28.5,
         "shelter_type": "School/College Facility",
         "notes": "Engineered terrace facility with all-weather tarmac access road and emergency triage sub-center."
+    },
+
+    # Illustrative Non-Odisha Mountain Demonstration Staging Havens (3 Sites)
+    {
+        "site_id": "RUDR-SHELTER-01",
+        "name": "Rudraprayag GMVN Multi-Hazard Staging Complex",
+        "district": "Rudraprayag (Illustrative Demo)",
+        "usable_capacity": 1800,
+        "capacity_persons": 1800,
+        "lat": 30.285,
+        "lon": 78.980,
+        "access_score": 8.8,
+        "infrastructure_score": 9.2,
+        "secondary_risk_score": 0.04,
+        "distance_from_district_centroid_km": 14.2,
+        "shelter_type": "Mountain Staging Complex",
+        "notes": "Reinforced river-bluff terrace above flood line; emergency helipad clearing and SDRF base depot."
+    },
+    {
+        "site_id": "UTTR-SHELTER-01",
+        "name": "Uttarkashi ITBP High-Altitude Staging Base",
+        "district": "Uttarkashi (Illustrative Demo)",
+        "usable_capacity": 2000,
+        "capacity_persons": 2000,
+        "lat": 30.725,
+        "lon": 78.445,
+        "access_score": 8.5,
+        "infrastructure_score": 9.0,
+        "secondary_risk_score": 0.05,
+        "distance_from_district_centroid_km": 18.0,
+        "shelter_type": "Paramilitary Staging Base",
+        "notes": "All-weather military terrace on NH-108; solar microgrid and mountain rescue clinic."
+    },
+    {
+        "site_id": "KINN-SHELTER-01",
+        "name": "Kinnaur Reckong Peo Safe Transit Facility",
+        "district": "Kinnaur (Illustrative Demo)",
+        "usable_capacity": 1500,
+        "capacity_persons": 1500,
+        "lat": 31.540,
+        "lon": 78.275,
+        "access_score": 8.0,
+        "infrastructure_score": 8.6,
+        "secondary_risk_score": 0.06,
+        "distance_from_district_centroid_km": 12.5,
+        "shelter_type": "District Transit Complex",
+        "notes": "Sub-divisional sports stadium complex with high retaining walls safe from rockfalls."
     }
 ]
 

@@ -22,9 +22,10 @@ from database import (
     set_system_state
 )
 from seed import seed_data
-from scenarios import SCENARIO_METADATA, apply_scenario
+from synthetic_data import SAFE_SITES_SEED
 from ml_model import ml_engine
-from relocation_engine import generate_relocation_plan
+from scenarios import apply_scenario, SCENARIO_METADATA
+from relocation_engine import generate_relocation_plan, get_habitation_relocation_logistics
 
 app = FastAPI(
     title="PUNARVAAS API",
@@ -216,6 +217,15 @@ def get_relocation_plan():
     habitations = get_all_habitations()
     safe_sites = get_safe_sites()
     return generate_relocation_plan(habitations, safe_sites)
+
+@app.get("/api/relocation/recommendations/{habitation_id}")
+def get_relocation_recommendations(habitation_id: str):
+    all_habs = get_all_habitations()
+    match = [h for h in all_habs if h["habitation_id"] == habitation_id]
+    if not match:
+        raise HTTPException(status_code=404, detail=f"Habitation {habitation_id} not found")
+    safe_sites = get_safe_sites()
+    return get_habitation_relocation_logistics(match[0], safe_sites)
 
 @app.get("/api/scenarios")
 def list_scenarios():

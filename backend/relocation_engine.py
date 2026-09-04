@@ -281,3 +281,138 @@ def generate_relocation_plan(
         "ranked_sites": ranked_sites,
         "unallocated_habitations": unallocated_habitations
     }
+
+def compute_haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Compute great-circle distance between two geographic coordinates in kilometers."""
+    R = 6371.0
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0)**2
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(max(0.0, 1.0 - a)))
+    return round(R * c, 1)
+
+DISTRICT_PRIMARY_ROUTES = {
+    "Puri": "NH-316 to Puri Coastal Arterial Evacuation Route",
+    "Kendrapara": "SH-10 High-Plinth Embankment Corridor (Cuttack-Chandbali)",
+    "Ganjam": "NH-16 / Gopalpur Port Heavy-Vehicle Highway",
+    "Kandhamal": "SH-41 Western Ghats Engineered Valley Highway",
+    "Rudraprayag (Illustrative Demo)": "NH-107 / NH-58 Char Dham All-Weather Mountain Corridor",
+    "Uttarkashi (Illustrative Demo)": "NH-108 Bhagirathi Valley Border Staging Highway",
+    "Kinnaur (Illustrative Demo)": "NH-05 Indo-Tibetan Highway Valley Transit Corridor"
+}
+
+def get_habitation_relocation_logistics(
+    hab: Dict[str, Any],
+    safe_sites: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    """
+    Compute comprehensive multi-shelter recommendations, relief supply requisitions,
+    and transit corridor timeline for an affected settlement.
+    """
+    hab_lat = hab.get("lat", 20.0)
+    hab_lon = hab.get("lon", 85.0)
+    district = hab.get("district", "Puri")
+    pop_total = hab.get("population", {}).get("total", 1000)
+    urgency = hab.get("relocation_urgency_tier", "IMMEDIATE")
+    is_immediate = urgency == "IMMEDIATE"
+
+    # 1. Evaluate and score all candidate safe sites
+    candidate_list = []
+    for s in safe_sites:
+        site_lat = s.get("lat", 0.0)
+        site_lon = s.get("lon", 0.0)
+        dist_km = compute_haversine_km(hab_lat, hab_lon, site_lat, site_lon) if (hab_lat and site_lat) else 25.0
+        is_same_dist = (s.get("district") == district)
+        usable_cap = int(s.get("usable_capacity", s.get("capacity_persons", 2000)))
+
+        score = compute_site_score(
+            site=s,
+            remaining_capacity=usable_cap,
+            needed_population=pop_total,
+            is_same_district=is_same_dist
+        )
+
+        candidate_list.append({
+            "site_id": s.get("site_id"),
+            "name": s.get("name"),
+            "district": s.get("district"),
+            "distance_km": dist_km,
+            "usable_capacity": usable_cap,
+            "access_score": s.get("access_score", 8.0),
+            "infrastructure_score": s.get("infrastructure_score", 8.0),
+            "secondary_risk_score": s.get("secondary_risk_score", 0.08),
+            "is_same_district": is_same_dist,
+            "suitability_score": score,
+            "notes": s.get("notes", "")
+        })
+
+    # Sort candidates: intra-district first, then proximity, then suitability score
+    candidate_list.sort(
+        key=lambda c: (
+            1 if c["is_same_district"] else 0,
+            -c["distance_km"] if c["is_same_district"] else -c["distance_km"] * 1.5,
+            c["suitability_score"]
+        ),
+        reverse=True
+    )
+
+    # Label top 3 candidates
+    tier_labels = ["Primary Recommended Haven", "Secondary Alternative Haven", "Emergency Contingency Staging"]
+    top_candidates = []
+    for i, c in enumerate(candidate_list[:3]):
+        c_copy = dict(c)
+        c_copy["recommendation_tier"] = tier_labels[i] if i < len(tier_labels) else "Backup Option"
+        c_copy["is_primary"] = (i == 0)
+        top_candidates.append(c_copy)
+
+    # 2. Humanitarian relief supplies requisition (NDMA & Sphere Standards)
+    v_demo = float(hab.get("vulnerability_demographic", 0.35))
+    k_pct = float(hab.get("housing_kutcha_pct", 0.50))
+    vulnerable_individuals = int(round(pop_total * v_demo))
+    kutcha_households = int(round((pop_total / 4.8) * k_pct))
+
+    relief_supplies = {
+        "drinking_water_litres_per_day": int(round(pop_total * 3.0)),
+        "food_packets_per_day": int(round(pop_total * 2)),
+        "sanitation_bio_toilets": max(1, math.ceil(pop_total / 20)),
+        "medical_hygiene_kits": max(1, math.ceil(pop_total / 50)),
+        "vulnerable_individuals_count": vulnerable_individuals,
+        "kutcha_households_count": kutcha_households,
+        "standards_basis": "NDMA Standard (3L water/person/day, 1 bio-toilet/20 persons, 2 meals/day)"
+    }
+
+    # 3. Evacuation Route & Approximate Timeline Window
+    primary_route = DISTRICT_PRIMARY_ROUTES.get(district, "Designated All-Weather Arterial Corridor")
+    buses_needed = max(1, math.ceil(pop_total / 50))
+    escort_trucks = max(2, math.ceil(pop_total / 300))
+
+    timeline = {
+        "primary_evacuation_route": primary_route,
+        "road_condition": "All-weather paved corridor with emergency convoy clearance",
+        "bus_convoy_fleet": buses_needed,
+        "odraf_escort_vehicles": escort_trucks,
+        "departure_window": (
+            "T-0 to T+4 Hours (Immediate staged departure before peak surge/inundation)"
+            if is_immediate
+            else "T+6 to T+18 Hours (Staged daylight evacuation convoy before weather deterioration)"
+        ),
+        "estimated_residence_duration": "Approx. 4 to 7 Days (Until river levels drop below Danger Line and IMD Green status is restored)",
+        "repatriation_protocol": "Staged safe return upon formal structural stability clearance by PWD/District Magistrate"
+    }
+
+    return {
+        "habitation_id": hab.get("habitation_id"),
+        "village": hab.get("village"),
+        "district": district,
+        "population_at_risk": pop_total,
+        "urgency_tier": urgency,
+        "lat": hab_lat,
+        "lon": hab_lon,
+        "candidate_shelters": top_candidates,
+        "relief_supplies": relief_supplies,
+        "evacuation_timeline": timeline
+    }
+

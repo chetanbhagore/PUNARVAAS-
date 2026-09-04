@@ -101,3 +101,9 @@ export async function fetchRelocationPlan() {
   if (!res.ok) throw new Error('Failed to fetch relocation plan');
   return res.json();
 }
+
+export async function fetchHabitationLogistics(habitationId) {
+  const res = await fetch(`${API_BASE}/relocation/recommendations/${encodeURIComponent(habitationId)}`);
+  if (!res.ok) throw new Error('Failed to fetch habitation logistics');
+  return res.json();
+}
