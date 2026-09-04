@@ -52,3 +52,5 @@ Thumbs.db
 # Task logs & Antigravity IDE system generated files
 .system_generated/
 *.log
+*.timestamp-*.mjs
+

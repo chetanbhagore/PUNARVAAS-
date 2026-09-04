@@ -263,7 +263,12 @@ export default function App() {
             )}
 
             {activeTab === 'relocation' && (
-              <RelocationTab habitations={habitations} />
+              <RelocationTab
+                habitations={habitations}
+                selectedHabitation={selectedHabitation}
+                onNavigateTab={setActiveTab}
+                onSelectHabitation={setSelectedHabitation}
+              />
             )}
 
             {activeTab === 'analytics' && (
