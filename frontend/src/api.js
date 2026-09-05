@@ -2,7 +2,10 @@
  * Centralized API client for PUNARVAAS backend
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 
+  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? '/api' 
+    : 'https://punarvaas.onrender.com/api');
 
 export async function fetchStats() {
   const res = await fetch(`${API_BASE}/stats`);
