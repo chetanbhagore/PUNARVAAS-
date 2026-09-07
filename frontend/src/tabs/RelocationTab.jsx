@@ -244,13 +244,22 @@ export default function RelocationTab({
           {/* Quick Action Export & Map Link */}
           <div className="flex items-center gap-2 shrink-0 self-end lg:self-start">
             {onNavigateTab && (
-              <button
-                onClick={() => onNavigateTab('live_map')}
-                className="flex items-center gap-1.5 px-3 py-2 rounded bg-[#3D5A73] hover:bg-[#16232E] text-xs font-semibold text-white transition-colors cursor-pointer shadow-xs"
-              >
-                <Navigation className="w-3.5 h-3.5 text-[#E0B33C]" />
-                <span>View Corridors on Live Map</span>
-              </button>
+              <>
+                <button
+                  onClick={() => onNavigateTab('evacuation_board')}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded bg-[#C13F3F] hover:bg-[#9B2727] text-xs font-semibold text-white transition-colors cursor-pointer shadow-xs animate-pulse"
+                >
+                  <Users className="w-3.5 h-3.5 text-white" />
+                  <span>Execute Evacuation Board →</span>
+                </button>
+                <button
+                  onClick={() => onNavigateTab('live_map')}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded bg-[#3D5A73] hover:bg-[#16232E] text-xs font-semibold text-white transition-colors cursor-pointer shadow-xs"
+                >
+                  <Navigation className="w-3.5 h-3.5 text-[#E0B33C]" />
+                  <span>View Map Corridors</span>
+                </button>
+              </>
             )}
             <button
               onClick={exportCSV}

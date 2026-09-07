@@ -2,7 +2,7 @@
 Backend automated tests to verify acceptance criteria.
 """
 
-from database import get_all_habitations, get_all_alerts, get_safe_sites
+from database import init_db, get_all_habitations, get_all_alerts, get_safe_sites
 from ml_model import ml_engine
 from scenarios import apply_scenario
 from risk_engine import compute_landslide_trigger, compute_flood_trigger, compute_cyclone_trigger
@@ -121,10 +121,103 @@ def test_relocation_mechanism():
 
     print(f"PASS: Relocation Engine verified. {summary['total_evacuees_allocated']:,} evacuees allocated across {summary['sites_utilized_count']} sites.")
 
+from database import (
+    ensure_evacuation_cases,
+    get_evacuation_cases,
+    transition_evacuation_case,
+    get_operation_events,
+    get_shelter_live_occupancy,
+    update_shelter_readiness
+)
+
+def test_evacuation_board_and_blocker_lifecycle():
+    op_id = "evacuation::test_unit_run"
+    habs = get_all_habitations()
+    safe_sites = get_safe_sites()
+    plan = generate_relocation_plan(habs, safe_sites)
+    allocs = plan["allocations"]
+    assert len(allocs) > 0, "Expected allocations for evacuation test"
+
+    ensure_evacuation_cases(op_id, allocs)
+    cases = get_evacuation_cases(op_id)
+    assert len(cases) == len(allocs)
+    
+    first = cases[0]
+    case_id = first["case_id"]
+    assert first["status"] == "UNCONTACTED"
+
+    # 1. Invalid jump must fail: UNCONTACTED -> CHECKED_IN
+    try:
+        transition_evacuation_case(op_id, case_id, "CHECKED_IN", "Tester")
+        assert False, "Should have raised ValueError on invalid jump"
+    except ValueError:
+        pass  # Expected
+
+    # 2. Valid forward progression: UNCONTACTED -> CONTACTED -> PICKED_UP -> CHECKED_IN
+    c1 = transition_evacuation_case(op_id, case_id, "CONTACTED", "Field Volunteer A")
+    assert c1["status"] == "CONTACTED"
+
+    c2 = transition_evacuation_case(op_id, case_id, "PICKED_UP", "Bus Driver B")
+    assert c2["status"] == "PICKED_UP"
+
+    c3 = transition_evacuation_case(op_id, case_id, "CHECKED_IN", "Shelter Manager C")
+    assert c3["status"] == "CHECKED_IN"
+
+    # 3. Test Blocker Reporting on a second case
+    if len(cases) > 1:
+        second_id = cases[1]["case_id"]
+        c_block = transition_evacuation_case(
+            op_id,
+            second_id,
+            "BLOCKED",
+            "Field Volunteer D",
+            note="Bridge inundated by 1.2m flash flood",
+            blocker_category="ROAD_INUNDATED",
+            resource_requested="4x4 Tractor or NDRF Inflatable Boat"
+        )
+        assert c_block["status"] == "BLOCKED"
+        assert c_block["blocker_category"] == "ROAD_INUNDATED"
+        assert "4x4 Tractor" in c_block["resource_requested"]
+
+    # 4. Verify live shelter occupancy aggregation
+    occ = get_shelter_live_occupancy(op_id)
+    assert first["site_id"] in occ
+    assert occ[first["site_id"]] >= first["allocated_headcount"]
+
+    # 5. Verify audit events ledger
+    events = get_operation_events(op_id, case_id)
+    assert len(events) >= 3
+    assert events[0]["to_status"] == "CHECKED_IN"
+    print(f"PASS: Evacuation Board state machine and audit trail verified ({len(cases)} cohorts, live check-ins tracked).")
+
+def test_shelter_readiness_heartbeat():
+    sites = get_safe_sites()
+    test_site = sites[0]
+    site_id = test_site["site_id"]
+
+    updated = update_shelter_readiness(site_id, {
+        "has_water": False,
+        "notes": "Emergency: Overhead tank pipeline damaged by gale winds"
+    })
+    assert updated is not None
+    assert updated["has_water"] is False
+    assert "damaged" in updated["notes"]
+
+    # Restore to operational
+    restored = update_shelter_readiness(site_id, {
+        "has_water": True,
+        "notes": "Operational baseline restored"
+    })
+    assert restored["has_water"] is True
+    print(f"PASS: Shelter Readiness Heartbeat verified for {test_site['name']}.")
+
 if __name__ == "__main__":
+    init_db()
     test_habitations_and_hazards()
     test_ml_model()
     test_per_hazard_formulas()
     test_judge_demo_mode()
     test_relocation_mechanism()
-    print("ALL BACKEND TESTS PASSED SUCCESSFULLY!")
+    test_evacuation_board_and_blocker_lifecycle()
+    test_shelter_readiness_heartbeat()
+    print("ALL BACKEND V2 TESTS PASSED SUCCESSFULLY!")

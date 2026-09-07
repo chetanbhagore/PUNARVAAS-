@@ -43,6 +43,13 @@ The system classifies settlements into **Red, Orange, Yellow, and Green zones**,
   - Exposes top contributing features and model coefficients.
 - **Habitation Directory**: Searchable, sortable registry of all monitored settlements with pagination.
 - **Carrying Capacity Scaffold**: Compares at-risk populations with certified shelter capacity, featuring a transparent disclaimer banner.
+- **Server-Backed Evacuation Execution Board (Version 2 Core)**:
+  - Transforms decision-support plans into field-verifiable safe arrival operations.
+  - State transition pipeline for priority cohorts: `Uncontacted → Contacted → Picked Up → Checked In`.
+  - Structured Blocker Escalation modal with standardized disaster taxonomy (`ROAD_INUNDATED`, `TRANSPORT_UNAVAILABLE`, `MEDICAL_URGENT`, `LIVESTOCK_REFUSAL`, `UNREACHABLE_COMMUNICATION`, `SHELTER_UNAVAILABLE`) and requested resource triggers (4x4 Tractor, Inflatable Boat, Paramedic Van).
+  - Immutable operational audit ledger tracking timestamped state jumps and recording officer IDs.
+  - Shelter Readiness Heartbeat (Water, Power, Sanitation, Medical flags) and dynamic live occupancy aggregation.
+  - Offline sync queue enabling field operations during cyclone and flood telecom dropouts.
 - **Explainable Relocation Decision Support & Capacity Allocation Engine**:
   - Multi-criteria greedy allocation matching high-urgency settlements (`IMMEDIATE` and `SHORT_TERM`) with 12 certified multipurpose safe shelters across Odisha pilot districts.
   - Transparent scoring breakdown: 35% Capacity Fit + 25% Road Access + 25% Infrastructure Readiness + 15% Secondary Threat Safety (with intra-district preference).
@@ -50,6 +57,25 @@ The system classifies settlements into **Red, Orange, Yellow, and Green zones**,
   - Deterministic, legally auditable rationale generation for District Magistrates and SDMA officers.
   - Human-in-the-loop sign-off workflow and one-click CSV Relocation Order export for field administration.
 - **Methodology & Provenance**: Mathematical formulations, operational thresholds, and backtest case studies (Darjeeling, Dikhow, Dharali, Cyclone Fani).
+
+---
+
+## 2.1 Version Roadmap & Git Version Management
+
+| Version | Tag / Branch | Core Identity | Primary Capabilities |
+| :--- | :--- | :--- | :--- |
+| **V1.1** | `v1.1.0-decision-support` | Decision-Support Dashboard | Multi-hazard risk evaluation, transparent relocation engine, safe shelter ranking. |
+| **V2.0** | `main` / `feature/smart-evacuation...` | Verified Evacuation Execution Platform | Server state machine, structured blocker taxonomy, audit ledger, shelter heartbeat, offline queue. |
+| **V3.0** | *Future Vision* | Interoperable Disaster Action Network | Real-time CAP integration, state adapters, calibrated non-completion risk model. |
+
+To checkout and run the baseline Decision-Support Dashboard (V1):
+```bash
+git checkout v1.1.0-decision-support
+```
+To return to the current Verified Execution Platform (V2):
+```bash
+git checkout feature/smart-evacuation-shelter-routing-dashboard
+```
 
 ---
 

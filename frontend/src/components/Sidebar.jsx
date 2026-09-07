@@ -8,7 +8,8 @@ import {
   Compass,
   BarChart3,
   BookOpen,
-  ShieldCheck
+  ShieldCheck,
+  Radio
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
   { id: 'directory', label: 'Habitation Directory', icon: Building2 },
   { id: 'capacity', label: 'Carrying Capacity', icon: Scale },
   { id: 'relocation', label: 'Relocation Planning', icon: Compass },
+  { id: 'evacuation_execution', label: 'Evacuation Execution', icon: Radio },
   { id: 'analytics', label: 'Analytics & Trends', icon: BarChart3 },
   { id: 'methodology', label: 'Methodology & Data Sources', icon: BookOpen },
 ];

@@ -11,6 +11,7 @@ import CapacityTab from './tabs/CapacityTab';
 import RelocationTab from './tabs/RelocationTab';
 import AnalyticsTab from './tabs/AnalyticsTab';
 import MethodologyTab from './tabs/MethodologyTab';
+import EvacuationExecutionTab from './tabs/EvacuationExecutionTab';
 
 import {
   fetchStats,
@@ -269,6 +270,10 @@ export default function App() {
                 onNavigateTab={setActiveTab}
                 onSelectHabitation={setSelectedHabitation}
               />
+            )}
+
+            {(activeTab === 'evacuation_execution' || activeTab === 'evacuation_board') && (
+              <EvacuationExecutionTab />
             )}
 
             {activeTab === 'analytics' && (

@@ -4,7 +4,33 @@ All notable changes to the PUNARVAAS Disaster Risk-Monitoring and Relocation-Dec
 
 ---
 
+## [v2.0.0] - 2026-09-07 (Verified Safe Passage & Evacuation Execution Platform)
+
+### Added
+- **Server-Backed Evacuation Execution Board (`backend/main.py`, `backend/database.py`, `frontend/src/tabs/EvacuationExecutionTab.jsx`)**:
+  - Transformed PUNARVAAS from a decision-support dashboard into a field-verified safe passage execution platform.
+  - Implemented state machine for priority evacuation cohorts: `UNCONTACTED` → `CONTACTED` → `PICKED_UP` → `CHECKED_IN`, with `BLOCKED` branching and resume rules.
+  - Hard constraint enforcement: Invalid status jumps throw a 409 Conflict exception.
+  - Explicit data provenance disclaimer: rows are strictly identified as **Synthetic Allocation Cohorts**, avoiding fabricated household identities.
+- **Structured Disaster Blocker Taxonomy & Control Room Escalation**:
+  - Standardized 5 operational blocker categories (`ROAD_INUNDATED`, `TRANSPORT_UNAVAILABLE`, `MEDICAL_URGENT`, `LIVESTOCK_REFUSAL`, `UNREACHABLE_COMMUNICATION`, `SHELTER_UNAVAILABLE`).
+  - Interactive in-app reporting modal with requested intervention suggestions (e.g., 4x4 Tractor, NDRF Inflatable Boat, Paramedic Van, Livestock Team).
+  - Prominent visual escalation callouts on the board for unresolved blockers.
+- **Immutable Operational Audit Ledger**:
+  - `operation_events` table recording chronological state transitions, recording officer identities, timestamps, blocker taxonomy, and situation notes.
+  - REST endpoint `GET /api/operations/evacuation-board/events` and interactive UI Audit Trail drawer.
+- **Shelter Readiness Heartbeat & Live Occupancy Feedback**:
+  - Real-time shelter infrastructure health flags (`has_water`, `has_power`, `has_sanitation`, `has_medical`) with `POST /api/safe-sites/{site_id}/readiness`.
+  - Dynamic `shelter_live_occupancy` aggregation reflecting verified check-ins against certified shelter limits.
+- **Offline Field Sync Queue**:
+  - Frontend `localStorage` transition queue with automatic sync on network reconnection and visual offline status badge.
+- **Comprehensive Backend Test Automation**:
+  - Added unit test suites `test_evacuation_board_and_blocker_lifecycle()` and `test_shelter_readiness_heartbeat()` to `backend/test_backend.py`.
+
+---
+
 ## [v1.1.0] - 2026-09-04
+
 
 ### Added
 - **Explainable Relocation Decision-Support Engine (`backend/relocation_engine.py`)**:

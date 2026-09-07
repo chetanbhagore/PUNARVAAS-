@@ -19,8 +19,15 @@ from database import (
     get_all_alerts,
     get_safe_sites,
     get_system_state,
-    set_system_state
+    set_system_state,
+    ensure_evacuation_cases,
+    get_evacuation_cases,
+    transition_evacuation_case,
+    get_operation_events,
+    get_shelter_live_occupancy,
+    update_shelter_readiness
 )
+from models import EvacuationCaseTransition, ShelterReadinessUpdate
 from seed import seed_data
 from synthetic_data import SAFE_SITES_SEED
 from ml_model import ml_engine
@@ -30,7 +37,7 @@ from relocation_engine import generate_relocation_plan, get_habitation_relocatio
 app = FastAPI(
     title="PUNARVAAS API",
     description="Disaster risk-monitoring and relocation-decision-support web application for Indian SDMA officials",
-    version="1.0.0"
+    version="2.0.0"
 )
 
 # Enable CORS for local Vite dev server
@@ -226,6 +233,80 @@ def get_relocation_recommendations(habitation_id: str):
         raise HTTPException(status_code=404, detail=f"Habitation {habitation_id} not found")
     safe_sites = get_safe_sites()
     return get_habitation_relocation_logistics(match[0], safe_sites)
+
+def _active_operation_id() -> str:
+    """Keep field execution state isolated by the currently active demo scenario."""
+    return f"evacuation::{get_system_state('active_scenario', 'baseline')}"
+
+@app.get("/api/operations/evacuation-board")
+def get_evacuation_board():
+    """Server-backed last-mile evacuation execution board.
+
+    The prototype creates one *cohort* for each priority allocation; it never
+    fabricates personal household data. Field teams move cohorts through the
+    operational chain: contacted → picked up → checked in, or blocked.
+    """
+    plan = generate_relocation_plan(get_all_habitations(), get_safe_sites())
+    operation_id = _active_operation_id()
+    ensure_evacuation_cases(operation_id, plan["allocations"])
+    cases = get_evacuation_cases(operation_id)
+    shelter_occupancy = get_shelter_live_occupancy(operation_id)
+    headcount_by_status = {
+        status: sum(c["allocated_headcount"] for c in cases if c["status"] == status)
+        for status in ("UNCONTACTED", "CONTACTED", "PICKED_UP", "CHECKED_IN", "BLOCKED")
+    }
+    return {
+        "operation_id": operation_id,
+        "data_mode": "SYNTHETIC_COHORTS",
+        "disclaimer": "Each row is an allocation cohort derived from synthetic habitation totals. It is not a verified household registry or dispatch order.",
+        "summary": {
+            "cohorts_total": len(cases),
+            "people_assigned": sum(c["allocated_headcount"] for c in cases),
+            "people_checked_in": headcount_by_status["CHECKED_IN"],
+            "people_blocked": headcount_by_status["BLOCKED"],
+            "people_pending_contact": headcount_by_status["UNCONTACTED"],
+            "by_status": headcount_by_status
+        },
+        "shelter_live_occupancy": shelter_occupancy,
+        "cases": cases
+    }
+
+@app.post("/api/operations/evacuation-board/{case_id}/transition")
+def transition_evacuation_board_case(case_id: str, payload: EvacuationCaseTransition):
+    operation_id = _active_operation_id()
+    try:
+        case = transition_evacuation_case(
+            operation_id=operation_id,
+            case_id=case_id,
+            to_status=payload.status,
+            actor_name=payload.actor_name,
+            note=payload.note,
+            blocker_category=payload.blocker_category,
+            resource_requested=payload.resource_requested
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail=str(error))
+    if not case:
+        raise HTTPException(status_code=404, detail="Evacuation cohort not found in the active operation")
+    return {"case": case, "operation_id": operation_id}
+
+@app.get("/api/operations/evacuation-board/events")
+def get_evacuation_board_events(case_id: Optional[str] = Query(None, description="Filter events by specific case ID")):
+    operation_id = _active_operation_id()
+    events = get_operation_events(operation_id, case_id)
+    return {
+        "operation_id": operation_id,
+        "events_count": len(events),
+        "events": events
+    }
+
+@app.post("/api/safe-sites/{site_id}/readiness")
+def update_site_readiness(site_id: str, payload: ShelterReadinessUpdate):
+    updates = payload.model_dump(exclude_unset=True)
+    updated = update_shelter_readiness(site_id, updates)
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Safe shelter site {site_id} not found")
+    return {"site": updated, "message": "Shelter readiness status updated successfully"}
 
 @app.get("/api/scenarios")
 def list_scenarios():

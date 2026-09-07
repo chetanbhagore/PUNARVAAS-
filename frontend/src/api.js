@@ -110,3 +110,102 @@ export async function fetchHabitationLogistics(habitationId) {
   if (!res.ok) throw new Error('Failed to fetch habitation logistics');
   return res.json();
 }
+
+export async function fetchEvacuationBoard() {
+  const res = await fetch(`${API_BASE}/operations/evacuation-board`);
+  if (!res.ok) throw new Error('Failed to fetch evacuation execution board');
+  return res.json();
+}
+
+export async function fetchOperationEvents(caseId = null) {
+  const url = caseId 
+    ? `${API_BASE}/operations/evacuation-board/events?case_id=${encodeURIComponent(caseId)}`
+    : `${API_BASE}/operations/evacuation-board/events`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch operational audit events');
+  return res.json();
+}
+
+export async function updateShelterReadiness(siteId, readinessPayload) {
+  const res = await fetch(`${API_BASE}/safe-sites/${encodeURIComponent(siteId)}/readiness`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(readinessPayload)
+  });
+  if (!res.ok) throw new Error('Failed to update shelter readiness');
+  return res.json();
+}
+
+// Offline Field Sync Queue Helpers
+const OFFLINE_QUEUE_KEY = 'punarvaas_offline_evac_queue';
+
+export function getOfflineQueue() {
+  try {
+    const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function enqueueOfflineTransition(caseId, payload) {
+  try {
+    const queue = getOfflineQueue();
+    queue.push({ caseId, payload, enqueuedAt: new Date().toISOString() });
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+  } catch (err) {
+    console.warn('Failed to enqueue offline transition:', err);
+  }
+}
+
+export async function flushOfflineQueue() {
+  const queue = getOfflineQueue();
+  if (!queue.length) return { synced: 0, failed: 0 };
+  
+  const remaining = [];
+  let synced = 0;
+  let failed = 0;
+
+  for (const item of queue) {
+    try {
+      await transitionEvacuationCase(item.caseId, item.payload, false);
+      synced++;
+    } catch (err) {
+      console.warn(`Failed to sync queued case ${item.caseId}:`, err);
+      failed++;
+      remaining.push(item);
+    }
+  }
+
+  try {
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remaining));
+  } catch {
+    // Ignore storage issues
+  }
+  return { synced, failed, remainingCount: remaining.length };
+}
+
+export async function transitionEvacuationCase(caseId, payload, allowOfflineQueue = true) {
+  try {
+    const res = await fetch(`${API_BASE}/operations/evacuation-board/${encodeURIComponent(caseId)}/transition`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.detail || 'Failed to update evacuation cohort');
+    }
+    return await res.json();
+  } catch (err) {
+    if (allowOfflineQueue && typeof window !== 'undefined' && !navigator.onLine) {
+      enqueueOfflineTransition(caseId, payload);
+      return {
+        queued_offline: true,
+        case: { case_id: caseId, status: payload.status, blocker_note: payload.note, blocker_category: payload.blocker_category }
+      };
+    }
+    throw err;
+  }
+}
+
