@@ -333,4 +333,28 @@ The formula follows CWC operational protocol — gauge crossing `DL` is treated 
 
 ---
 
+## Session 2 — 18 September 2026
+
+### Q3: Reality Check Audit — Doc vs Code Discrepancies & Resolutions
+
+**Context:** An audit of `PRODUCT.md`, `MECHANISM.md`, `DECISIONS.md`, and `README.md` flagged that `PRODUCT.md` had drifted from the actual running codebase. We opened the actual `.py` files in `backend/` (`risk_engine.py`, `relocation_engine.py`, `ml_model.py`, `synthetic_data.py`, `database.py`) and verified every ground truth claim.
+
+#### Verified Ground Truth (Code vs Old PRODUCT.md)
+
+| Parameter | Actual Code Ground Truth (`backend/*.py`) | Old `PRODUCT.md` Claim | Status / Action Taken |
+| :--- | :--- | :--- | :--- |
+| **Landslide Formula** | `min(1.0, rainfall_24h / 150.0)` in `risk_engine.py` (single 24h GSI term) | `(0.65*R24 + 0.35*R72) / 150` | Rewritten in `PRODUCT.md` to exact code match |
+| **Flood Formula** | 2-branch formula in `risk_engine.py`: `0.60 + 0.40 * clamp((L-DL)/(HFL-DL))` if above DL; else `max(0, 0.60 - 0.20*(DL-L))` | 4-branch formula with made-up intermediate thresholds | Rewritten in `PRODUCT.md` to exact code match |
+| **Cyclone Trigger** | 6-tier mapping table in `risk_engine.py` (`CYCLONE_SEVERITY_MAP`: Depression 0.20 to Super Cyclone 1.0) | 7-tier table + exponential distance decay term `exp(-d/60)` | Rewritten in `PRODUCT.md` to exact code match |
+| **Relocation Algorithm** | Greedy Multi-Criteria Allocation (`relocation_engine.py`) with hard shelter capacity limits and split overflow | "Multi-Shelter Knapsack" | Fixed mislabel in architecture diagram & text |
+| **Spatial Constraint** | Soft 15% weighted score factor: `0.15 * (1.0 - sec_risk_raw)` in `relocation_engine.py` | "Hard Spatial Constraint >= 5.0 km" | Corrected to soft weighted safety factor |
+| **Shelter Count** | 15 total in `synthetic_data.py` (12 active in Odisha pilot across 4 districts + 3 illustrative non-Odisha) | 15 (without explaining the 12 vs 15 breakdown) | Explicitly documented: 12 in Odisha, 3 illustrative, 15 total |
+| **ML Discrepancy Threshold** | `|R_i - P_i| > 0.15` in `main.py` and `ml_model.py` | `> 0.35` | Corrected to `> 0.15` |
+| **ML Feature Space** | 6 features in `ml_model.py` (susc, trigger, vuln, kutcha, history, shelter_remoteness) | 14-dimensional fantasy vector | Corrected to the exact 6 features |
+| **Self-Scorecard** | Inappropriate 98/100 self-rating in §16 | 98/100 "EXCEPTIONALLY STRONG PRODUCT CANDIDATE" | Deleted entirely; replaced with objective verification matrix |
+| **Synthetic Data Mode** | Permanent UI badge & ADR 3 rationale (deterministic judging, ethical compliance) | Missing / obscured | Prominently disclosed in §1, §3.3, §7.1, §9.5, §14 |
+
+---
+
 *Last updated: 18 September 2026*
+

@@ -18,46 +18,48 @@
 3. [The PUNARVAAS Solution Overview](#3-the-punarvaas-solution-overview)
    - 3.1 [Product Vision & Value Proposition](#31-product-vision--value-proposition)
    - 3.2 [Core Innovations & The Paradigm Shift](#32-core-innovations--the-paradigm-shift)
-   - 3.3 [Target Personas & Stakeholder Workflows](#33-target-personas--stakeholder-workflows)
+   - 3.3 [Synthetic Data Mode: Architecture & Disclosure (ADR 3)](#33-synthetic-data-mode-architecture--disclosure-adr-3)
+   - 3.4 [Target Personas & Stakeholder Workflows](#34-target-personas--stakeholder-workflows)
 4. [Detailed Solution Approach: Mapping PS Requirements to Architecture](#4-detailed-solution-approach-mapping-ps-requirements-to-architecture)
 5. [Scientific & Mathematical Formulations](#5-scientific--mathematical-formulations)
    - 5.1 [Dynamic 4-Layer Multi-Hazard Risk Scoring Equation](#51-dynamic-4-layer-multi-hazard-risk-scoring-equation)
-   - 5.2 [Hazard Trigger Normalization Models (Landslide, Flood, Cyclone, Cloudburst)](#52-hazard-trigger-normalization-models)
-   - 5.3 [Carrying Capacity Stress Index (Habitation Level)](#53-carrying-capacity-stress-index-habitation-level)
-   - 5.4 [Multi-Criteria Relocation Site Suitability & Allocation Algorithm](#54-multi-criteria-relocation-site-suitability--allocation-algorithm)
+   - 5.2 [Hazard-Specific Trigger Formulations (Code-Grounded)](#52-hazard-specific-trigger-formulations)
+   - 5.3 [Vulnerability & Historical Recurrence Formulations](#53-vulnerability--historical-recurrence-formulations)
+   - 5.4 [Decision Logic, Trend Derivations & Alert Rules](#54-decision-logic-trend-derivations--alert-rules)
+   - 5.5 [Carrying Capacity Stress & Multi-Criteria Relocation Engine](#55-carrying-capacity-stress--multi-criteria-relocation-engine)
 6. [Machine Learning Pipeline & Explainable AI (XAI)](#6-machine-learning-pipeline--explainable-ai-xai)
-   - 6.1 [Model Architecture & Feature Space](#61-model-architecture--feature-space)
-   - 6.2 [Dual-Engine Verification (Rule-Based vs ML Inference)](#62-dual-engine-verification)
-   - 6.3 [Explainable AI (Local Feature Attribution & Plain-Language Rationales)](#63-explainable-ai)
+   - 6.1 [Model Architecture & 6-Dimensional Feature Space](#61-model-architecture--6-dimensional-feature-space)
+   - 6.2 [Dual-Engine Verification & Discrepancy Flagging (>0.15)](#62-dual-engine-verification--discrepancy-flagging-015)
+   - 6.3 [Explainable AI (Feature Contribution Attribution)](#63-explainable-ai-feature-contribution-attribution)
 7. [System Architecture & Engineering Design](#7-system-architecture--engineering-design)
    - 7.1 [High-Level Architecture & End-to-End Data Pipeline](#71-high-level-architecture--end-to-end-data-pipeline)
    - 7.2 [Backend Micro-Services & API Contracts](#72-backend-micro-services--api-contracts)
    - 7.3 [Frontend GIS & Situational Dashboard](#73-frontend-gis--situational-dashboard)
-   - 7.4 [Relational Database Schema](#74-relational-database-schema)
+   - 7.4 [Relational Database Schema (SQLite / PostGIS-Ready)](#74-relational-database-schema-sqlite--postgis-ready)
 8. [Technology Stack & Architectural Rationale](#8-technology-stack--architectural-rationale)
 9. [Research Grounding & Real-World Domain Data](#9-research-grounding--real-world-domain-data)
    - 9.1 [Geological Survey of India (GSI) Landslide Thresholds](#91-geological-survey-of-india-gsi-landslide-thresholds)
    - 9.2 [Central Water Commission (CWC) River Gauge Baselines](#92-central-water-commission-cwc-river-gauge-baselines)
-   - 9.3 [India Meteorological Department (IMD) Cyclone & Rainfall Classifications](#93-india-meteorological-department-imd-cyclone--rainfall-classifications)
+   - 9.3 [India Meteorological Department (IMD) Cyclone Classifications](#93-india-meteorological-department-imd-cyclone-classifications)
    - 9.4 [Socio-Demographic Indicators & Housing Vulnerability](#94-socio-demographic-indicators--housing-vulnerability)
-   - 9.5 [Pilot District Calibrations (Odisha Focus)](#95-pilot-district-calibrations-odisha-focus)
+   - 9.5 [Pilot District Calibrations & Shelter Distribution (12 vs 15)](#95-pilot-district-calibrations--shelter-distribution-12-vs-15)
 10. [Comprehensive Feature Walkthrough (8 Functional Modules)](#10-comprehensive-feature-walkthrough-8-functional-modules)
 11. [Feasibility Analysis](#11-feasibility-analysis)
 12. [Viability, Scalability & Production Roadmap](#12-viability-scalability--production-roadmap)
 13. [Quantifiable Impact, Benefits & ROI](#13-quantifiable-impact-benefits--roi)
 14. [Transparent Disclosure of Limitations & Boundary Conditions](#14-transparent-disclosure-of-limitations--boundary-conditions)
 15. [Compliance with National Mandates & Disaster Act 2005](#15-compliance-with-national-mandates--disaster-act-2005)
-16. [Conclusion & Executive Evaluation Matrix](#16-conclusion--executive-evaluation-matrix)
+16. [Conclusion & System Verification Matrix](#16-conclusion--system-verification-matrix)
 
 ---
 
 ## 1. Executive Summary
 
-Every year, recurring natural hazards—such as Bay of Bengal tropical cyclones, riverine flash floods across the Mahanadi and Baitarani basins, Himalayan and Eastern Ghats landslides, and localized cloudbursts—inflict catastrophic loss of life, displacement, and infrastructure damage across India. The fundamental impediment to disaster resilience in India is not a lack of meteorological warnings; rather, it is **the structural disconnect between raw hazard forecasts and human habitational vulnerability**. Disaster response has historically remained **reactive**: authorities mobilize evacuation assets only after floodwaters breach embankments or landslides sever arterial roads, while relocation shelters frequently face chronic overcrowding or secondary disaster exposure.
+Every year, recurring natural hazards—such as Bay of Bengal tropical cyclones, riverine flash floods across the Mahanadi and Baitarani basins, Eastern Ghats landslides, and localized cloudbursts—inflict catastrophic displacement, infrastructural severance, and loss of life across India. The fundamental impediment to disaster resilience in India is not a lack of meteorological warnings; rather, it is **the structural disconnect between raw hazard forecasts and human habitational vulnerability**. Disaster response has historically remained **reactive**: authorities mobilize evacuation assets only after floodwaters breach embankments or landslides sever arterial corridors, while safe shelters face chronic overcrowding or secondary disaster threats.
 
 **PUNARVAAS (पुनर्वास)** solves this national challenge directly under **Smart India Hackathon Problem Statement 26191** (Ministry of Home Affairs / NDRF). PUNARVAAS is an intelligent, GIS-enabled decision support and situational awareness platform that dynamically identifies **Multi-Hazard Red Zones**, continuously computes **Habitational Carrying Capacity Stress**, and algorithmically computes **Immediate Safe Relocation Needs** with multi-shelter capacity constraint balancing.
 
-By coupling a **rigorous 4-layer mathematical risk formula** (integrating GSI susceptibility, real-time hydrometeorological triggers, Census demographic vulnerability, and historical disaster return periods) with an **Explainable Machine Learning Classifier (XAI)** and a **Constraint-Aware Relocation Engine**, PUNARVAAS bridges the gap between raw early warnings and tactical field execution. The platform equips State Disaster Management Authorities (SDMA) and Incident Commanders with sub-minute evacuation dispatch manifests, human-in-the-loop operational boards, and historical scenario replays, establishing a robust, proactive disaster governance framework.
+By coupling a **rigorous 4-layer mathematical risk formula** (integrating GSI susceptibility, real-time hydrometeorological triggers, Census demographic vulnerability, and historical disaster return periods) with an **Explainable Machine Learning Classifier (XAI)** and a **Greedy Capacity-Constrained Relocation Engine**, PUNARVAAS bridges the gap between raw early warnings and tactical field execution. The platform equips State Disaster Management Authorities (SDMA) and Incident Commanders with sub-minute evacuation dispatch manifests, human-in-the-loop operational boards, and historical scenario replays, establishing a robust, proactive disaster governance framework.
 
 ---
 
@@ -80,17 +82,17 @@ India's geoclimatic conditions make it one of the most disaster-prone countries 
 * **Floods:** Over 40 million hectares (approx. 12% of total land area) are flood-prone, recurring seasonally along the Brahmaputra, Ganga, Mahanadi, and Baitarani river basins.
 * **Cyclones:** Approx. 5,700 km of India's 7,516 km coastline across 13 coastal states and Union Territories is exposed to severe tropical cyclones originating in the Bay of Bengal and the Arabian Sea.
 * **Landslides:** Over 12.6% of India's landmass (approx. 0.42 million sq. km) across the Himalayas, Western Ghats, and Eastern Ghats is categorized as moderate-to-high landslide susceptibility by the Geological Survey of India (GSI).
-* **Cloudbursts & Flash Floods:** Mountainous river valleys in Uttarakhand, Himachal Pradesh, and Jammu & Kashmir increasingly witness extreme localized precipitation events exceeding $100\text{ mm/hr}$, triggering devastating debris flows.
+* **Cloudbursts & Flash Floods:** Mountainous river valleys in Uttarakhand, Himachal Pradesh, and Jammu & Kashmir increasingly witness extreme localized convective events exceeding $100\text{ mm/hr}$, triggering devastating debris flows.
 
 ### 2.3 Core Gaps in Existing Disaster Management Systems
 
 | Parameter | Current Disaster Response State | The PUNARVAAS Solution |
 | :--- | :--- | :--- |
 | **Response Posture** | **Reactive:** Mobilization begins when disaster impacts are underway (e.g., water in habitations, road blockades). | **Proactive & Predictive:** Dynamic Red Zones calculated 24–72 hours prior based on antecedent triggers and forecasts. |
-| **Zonation Resolution** | **Static & Coarse:** District-level or block-level static hazard atlas maps updated once every 5–10 years. | **Dynamic & Habitation-Level:** Pinpoints individual vulnerable habitations ($150+$ mapped in pilot) updating every computational cycle. |
+| **Zonation Resolution** | **Static & Coarse:** District-level or block-level static hazard atlas maps updated once every 5–10 years. | **Dynamic & Habitation-Level:** Pinpoints individual vulnerable habitations (150 in Odisha pilot) updating every computational cycle. |
 | **Vulnerability Modeling** | **Hazard-Only Focus:** Maps show where it rains or floods, ignoring socio-economic factors or shelter quality. | **Multi-Dimensional:** Couples physical hazard triggers with housing structure type, elderly/child ratios, and road connectivity. |
 | **Carrying Capacity** | **Ignored / Unmonitored:** Shelters fill randomly on a first-come basis, leading to acute overcrowding and resource exhaustion. | **Algorithmic Equilibrium:** Tracks real-time shelter capacity vs. evacuee headcount, preventing secondary collapse. |
-| **Relocation Logic** | **Ad-Hoc / Discretionary:** Evacuation routes and destination shelters chosen manually under crisis conditions. | **Multi-Criteria Optimization:** Scores candidate shelters by capacity fit, road accessibility, medical infra, and secondary hazard buffers. |
+| **Relocation Logic** | **Ad-Hoc / Discretionary:** Evacuation routes and destination shelters chosen manually under crisis conditions. | **Multi-Criteria Greedy Allocation:** Scores candidate shelters by capacity fit, road accessibility, medical infra, and secondary hazard buffers. |
 | **Field Execution** | **Paper / Verbal Communication:** Lack of real-time visibility into whether stranded hamlets were reached or transported. | **Digital Operations Board:** Full triage state machine (`UNCONTACTED` $\rightarrow$ `CONTACTED` $\rightarrow$ `IN_TRANSIT` $\rightarrow$ `CHECKED_IN`). |
 
 ---
@@ -100,8 +102,8 @@ India's geoclimatic conditions make it one of the most disaster-prone countries 
 ### 3.1 Product Vision & Value Proposition
 
 **PUNARVAAS (पुनर्वास)** is a Sanskrit and Hindi term meaning *"resettlement"* or *"rehabilitation"*. The platform’s mission is to provide emergency planners, district collectors, and disaster management authorities with **an end-to-end, scientifically defensible, automated decision pipeline** that:
-1. Translates complex hydrometeorological forecasts into instantaneous spatial risk categories.
-2. Identifies habitations that have crossed the safety threshold into **Red Zones** ($\ge 0.75$ risk score).
+1. Translates hydrometeorological forecasts into instantaneous spatial risk categories.
+2. Identifies habitations that cross the safety threshold into **Red Zones** ($R \ge 0.75$ composite score).
 3. Automatically computes safe, capacity-constrained relocation solutions before disaster impact occurs.
 4. Provides field commanders with human-in-the-loop verification, actionable evacuation manifests, and real-time operational tracking.
 
@@ -112,16 +114,25 @@ India's geoclimatic conditions make it one of the most disaster-prone countries 
 Static Hazard Map  --->  Disaster Strikes  --->  Panic Evacuation  --->  Overcrowded Shelters  --->  Rebuild in Danger Zone
                                                                                                            │
 [ PUNARVAAS Paradigm ]                                                                                     ▼
-Dynamic Sensor Ingestion ──> Multi-Hazard Risk ──> Red Zone Flagging ──> Relocation Engine ──> Tracked Evacuation ──> Resilient Resettlement
- (IMD / CWC / GSI)            (4-Layer Formula)     (Immediate Need)     (Capacity Aware)       (State Machine)      (Policy Planning)
+Ground-Truth Calibrated ──> Multi-Hazard Risk ──> Red Zone Flagging ──> Relocation Engine ──> Tracked Evacuation ──> Resilient Resettlement
+  (CWC / GSI / IMD Norms)      (4-Layer Formula)     (Immediate Need)     (Greedy Allocation)    (State Machine)      (Policy Planning)
 ```
 
 1. **Deterministic-Statistical Hybrid Risk Formulation:** Unlike pure black-box AI tools or purely qualitative hazard scales, PUNARVAAS uses a dual-engine architecture: a deterministic 4-layer mathematical equation grounded in official government thresholds, paired with an Explainable Machine Learning (XAI) classifier.
 2. **True Habitation-Level Carrying Capacity Assessment:** Quantifies demographic strain on local ecological and structural resources, identifying habitations whose current footprint cannot safely withstand hazard loads.
-3. **Safe Buffer Spatial Routing:** Ensures that no evacuated community is routed to a shelter located inside or near an active hazard envelope ($> 5.0\text{ km}$ dynamic safety buffer).
-4. **Human-in-the-Loop Operational Integrity:** Acknowledges that automated algorithms must not override district administration without executive sign-off; provides an official sign-off gate before dispatch manifests are issued.
+3. **Capacity-Aware Multi-Criteria Safe Shelter Matching:** Balances remaining shelter capacity against evacuee headcount, factoring in road accessibility, medical readiness, and secondary disaster safety while observing administrative district boundaries.
+4. **Human-in-the-Loop Operational Integrity:** Acknowledges that automated algorithms must advise rather than mandate without executive sign-off; provides an official sign-off gate before dispatch manifests are issued.
 
-### 3.3 Target Personas & Stakeholder Workflows
+### 3.3 Synthetic Data Mode: Architecture & Disclosure (ADR 3)
+
+In strict adherence to engineering ethics and Architectural Decision Record 3 (`DECISIONS.md`), the current demonstration system operates in **Synthetic Data Mode**, featuring a permanent, prominent disclosure badge on the UI:
+
+* **Why Synthetic Data Mode?**
+  1. **Evaluation Determinism:** Live public disaster APIs (such as CWC hydrologic gauges or GSI portals) require formal departmental VPN credentials, have unpredictable rate limits, and cannot be triggered into an acute disaster state on demand during a hackathon evaluation.
+  2. **Simulated Escalation:** Pre-cached realistic scenario benchmarks (e.g., river stage surging from 92.20m to 93.88m across Baitarani) allow evaluators to witness live `ORANGE` $\rightarrow$ `RED` state transitions deterministically.
+  3. **Domain Grounding:** The data is **not arbitrary random noise**; it is deterministically generated (`random.seed(42)`) in `backend/synthetic_data.py` using real Census 2011 population distributions, CWC gauge datums, GSI threshold benchmarks, and IMD storm tracks.
+
+### 3.4 Target Personas & Stakeholder Workflows
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -143,16 +154,14 @@ Dynamic Sensor Ingestion ──> Multi-Hazard Risk ──> Red Zone Flagging ─
 
 ## 4. Detailed Solution Approach: Mapping PS Requirements to Architecture
 
-The following table explicitly demonstrates how every mandate of PS 26191 is fulfilled within PUNARVAAS:
-
 | PS 26191 Requirement | Platform Technical Implementation | Architectural Component |
 | :--- | :--- | :--- |
-| **"Intelligent, GIS-enabled decision support platform"** | Full interactive Leaflet GIS workspace rendering 150+ real-world habitations, 15 multi-purpose cyclone/flood shelters, dynamic color-coded hazard contours, and live buffer radiuses. | `frontend/src/components/RiskMap.jsx`, `frontend/src/components/Dashboard.jsx` |
-| **"Dynamically identify and update multi-hazard Red Zones"** | Continuous computation of the 4-layer composite equation every time trigger conditions update; habitations reaching $R \ge 0.75$ are immediately classified as Red Zones and highlighted in pulsating red. | `backend/app/services/risk_engine.py` (`compute_composite_risk`) |
-| **"Assess the carrying capacity of vulnerable areas"** | Computes Habitation Carrying Capacity Stress Index based on population density, kutcha housing ratio, and environmental slope threshold; cross-referenced with shelter carrying capacity. | `backend/app/services/risk_engine.py`, `backend/app/services/relocation_engine.py` |
-| **"Prioritize habitations requiring immediate relocation"** | Urgent priority ranking algorithm sorting Red Zone habitations by a composite index of risk severity, population size, road disconnection risk, and demographic vulnerability. | `backend/app/services/relocation_engine.py` (`generate_relocation_plan`) |
-| **"Integrating hazard intensity, population vulnerability, disaster history"** | 4-layer mathematical formulation: Susceptibility ($35\%$) + Dynamic Trigger Intensity ($30\%$) + Socio-Economic Vulnerability ($25\%$) + Historical Disaster Frequency ($10\%$). | `backend/app/services/risk_engine.py` |
-| **"Actionable insights for SDMAs"** | Instant generation of field dispatch manifests (CSV export), ambulance/bus logistical estimates, and real-time triage state tracking. | `frontend/src/components/EvacuationBoard.jsx`, `backend/app/routes/evacuation.py` |
+| **"Intelligent, GIS-enabled decision support platform"** | Full interactive Leaflet GIS workspace rendering 150 pilot habitations, 15 multi-purpose cyclone/flood shelters, dynamic color-coded hazard contours, and live buffer radiuses. | `frontend/src/components/RiskMap.jsx`, `frontend/src/components/Dashboard.jsx` |
+| **"Dynamically identify and update multi-hazard Red Zones"** | Continuous computation of the 4-layer composite equation every time trigger conditions update; habitations reaching $R \ge 0.75$ are immediately classified as Red Zones and highlighted in pulsating red. | `backend/risk_engine.py` (`compute_composite_risk`) |
+| **"Assess the carrying capacity of vulnerable areas"** | Evaluates shelter usable capacity headroom against evacuee headcounts and computes habitation-level infrastructure stress indicators. | `backend/relocation_engine.py`, `backend/risk_engine.py` |
+| **"Prioritize habitations requiring immediate relocation"** | Urgent priority ranking algorithm sorting Red Zone habitations by urgency tier (`IMMEDIATE` ahead of `SHORT_TERM`), composite risk severity, and population size. | `backend/relocation_engine.py` (`generate_relocation_plan`) |
+| **"Integrating hazard intensity, population vulnerability, disaster history"** | 4-layer mathematical formulation: Susceptibility ($35\%$) + Dynamic Trigger Intensity ($30\%$) + Socio-Economic Vulnerability ($25\%$) + Historical Disaster Frequency ($10\%$). | `backend/risk_engine.py` |
+| **"Actionable insights for SDMAs"** | Instant generation of field dispatch manifests (CSV export), ambulance/bus logistical estimates, and real-time triage state tracking. | `frontend/src/components/EvacuationBoard.jsx`, `backend/main.py` |
 
 ---
 
@@ -160,143 +169,189 @@ The following table explicitly demonstrates how every mandate of PS 26191 is ful
 
 ### 5.1 Dynamic 4-Layer Multi-Hazard Risk Scoring Equation
 
-To determine the risk level of any habitation $i$ at time $t$, PUNARVAAS implements a bounded, continuous multi-criteria scoring function $R(i, t) \in [0.0, 1.0]$:
+For each habitation $i$, the composite risk score $R_i \in [0.0, 1.0]$ is computed deterministically as a convex combination of four distinct normalized risk layers:
 
-$$R_i(t) = w_s \cdot S_i + w_t \cdot T_i(t) + w_v \cdot V_i + w_h \cdot H_i$$
+$$R_i = w_s \cdot S_i + w_t \cdot T_i + w_v \cdot V_i + w_h \cdot H_i$$
 
-Where weights are calibrated to disaster management operational mandates:
-* $w_s = 0.35$ (Intrinsic Geospatial Susceptibility)
+Where weights are strictly anchored to operational priorities:
+* $w_s = 0.35$ (Intrinsic Static Hazard Susceptibility)
 * $w_t = 0.30$ (Dynamic Real-Time Hazard Trigger Intensity)
 * $w_v = 0.25$ (Socio-Demographic Vulnerability & Structural Exposure)
 * $w_h = 0.10$ (Historical Disaster Recurrence & Memory)
+
 $$\sum w = 0.35 + 0.30 + 0.25 + 0.10 = 1.00$$
 
-#### Zonation Classification Thresholds
-
-$$\text{Zone}(R) = \begin{cases} 
-\mathbf{RED} & \text{if } R \ge 0.75 \quad \text{(Immediate Mandatory Relocation Required)} \\
-\mathbf{ORANGE} & \text{if } 0.50 \le R < 0.75 \quad \text{(High Alert; Pre-Position Evacuation Assets)} \\
-\mathbf{YELLOW} & \text{if } 0.30 \le R < 0.50 \quad \text{(Advisory Stage; Monitor Sensor Streams)} \\
-\mathbf{GREEN} & \text{if } R < 0.30 \quad \text{(Normal Situational Status; Safe for Inhabitation)}
-\end{cases}$$
+The composite score is clamped to $[0.0, 1.0]$ and rounded to three decimal places.
 
 ---
 
-### 5.2 Hazard Trigger Normalization Models
+### 5.2 Hazard-Specific Trigger Formulations
 
-The real-time trigger term $T_i(t) \in [0.0, 1.0]$ is computed dynamically based on the active hazard type:
+The real-time trigger term $T_i \in [0.0, 1.0]$ is computed dynamically by `backend/risk_engine.py` according to the active hazard type:
 
-#### 1. Landslide Trigger Model (Rainfall Threshold Saturation)
-Grounded in GSI empirical thresholds where $150\text{ mm/day}$ represents the acute failure trigger:
+#### 1. Landslide Trigger Model (Hilly Terrain)
+Anchored to the **Geological Survey of India (GSI)** 130–150 mm single-day rainfall saturation threshold:
 
-$$T_{\text{landslide}} = \min\left(1.0, \, \frac{0.65 \cdot R_{24\text{h}} + 0.35 \cdot R_{72\text{h-ant}}}{150.0}\right)$$
+$$T_{\text{landslide}} = \min\left(1.0, \, \frac{R_{24\text{h}}}{150.0}\right)$$
 
-Where $R_{24\text{h}}$ is the last 24 hours of precipitation ($\text{mm}$) and $R_{72\text{h-ant}}$ is the 72-hour antecedent precipitation index.
+Where $R_{24\text{h}}$ is the cumulative precipitation in millimeters recorded over the previous 24 hours. When $R_{24\text{h}} \ge 150\text{ mm}$, $T_{\text{landslide}} = 1.00$.
 
 #### 2. Riverine Flood Trigger Model (CWC Water Level Relative Gauge)
-Grounded in Central Water Commission gauge levels where:
-* $L_{\text{normal}}$ = Baseline normal flow level ($\text{m}$)
-* $L_{\text{warning}}$ = Warning level ($\text{m}$)
-* $L_{\text{danger}}$ = Danger level ($\text{m}$)
-* $L_{\text{hfl}}$ = Historical Highest Flood Level ($\text{m}$)
+Anchored to **Central Water Commission (CWC)** operational protocol, where crossing Danger Level ($DL$) represents a categorical operational escalation scaling up to the Highest Flood Level ($HFL$):
 
 $$T_{\text{flood}} = \begin{cases} 
-0.0 & \text{if } L \le L_{\text{normal}} \\
-0.50 \cdot \left(\frac{L - L_{\text{normal}}}{L_{\text{warning}} - L_{\text{normal}}}\right) & \text{if } L_{\text{normal}} < L \le L_{\text{warning}} \\
-0.50 + 0.35 \cdot \left(\frac{L - L_{\text{warning}}}{L_{\text{danger}} - L_{\text{warning}}}\right) & \text{if } L_{\text{warning}} < L \le L_{\text{danger}} \\
-0.85 + 0.15 \cdot \min\left(1.0, \frac{L - L_{\text{danger}}}{L_{\text{hfl}} - L_{\text{danger}}}\right) & \text{if } L > L_{\text{danger}}
+0.60 + 0.40 \cdot \operatorname{clamp}\left(\frac{\text{Level} - DL}{HFL - DL}, \, 0.0, \, 1.0\right) & \text{if } \text{Level} \ge DL \\
+\max\left(0.0, \, 0.60 - 0.20 \cdot (DL - \text{Level})\right) & \text{if } \text{Level} < DL
 \end{cases}$$
 
-#### 3. Tropical Cyclone Trigger Model (Wind Speed & Distance Decay)
-Grounded in IMD cyclone categorizations and exponential coastal distance decay:
+Where:
+* $\text{Level}$ = Current river stage gauge reading ($\text{m}$)
+* $DL$ = CWC Danger Level threshold ($\text{m}$) (e.g., $92.40\text{ m}$ for Baitarani at Akhuapada)
+* $HFL$ = Historical Highest Flood Level ($\text{m}$) (e.g., $94.35\text{ m}$)
 
-$$T_{\text{cyclone}} = C_{\text{intensity}} \cdot \exp\left(-\frac{d_{\text{coast}}}{60.0}\right)$$
+#### 3. Tropical Cyclone Trigger Model (IMD Categorical Classification)
+Translates categorical India Meteorological Department (IMD) cyclone storm alerts directly into normalized trigger levels via discrete mapping:
 
-Where $d_{\text{coast}}$ is distance from shoreline in kilometers, and $C_{\text{intensity}}$ maps to IMD storm classifications:
-* Depression ($45\text{ km/h}$): $0.20$
-* Deep Depression ($55\text{ km/h}$): $0.35$
-* Cyclonic Storm ($75\text{ km/h}$): $0.50$
-* Severe Cyclonic Storm ($100\text{ km/h}$): $0.70$
-* Very Severe Cyclonic Storm ($130\text{ km/h}$): $0.85$
-* Extremely Severe Cyclonic Storm ($180\text{ km/h}$): $0.95$
-* Super Cyclonic Storm ($> 220\text{ km/h}$): $1.00$
+| IMD Storm Category | Sustained Wind Speed Range | Assigned $T_{\text{cyclone}}$ |
+| :--- | :--- | :--- |
+| **Depression** | 31–49 km/h | $0.20$ |
+| **Deep Depression** | 50–61 km/h | $0.35$ |
+| **Cyclonic Storm** | 62–88 km/h | $0.50$ |
+| **Severe Cyclonic Storm** | 89–117 km/h | $0.65$ |
+| **Very Severe Cyclonic Storm** | 118–166 km/h | $0.80$ |
+| **Extremely Severe / Super Cyclone** | $\ge 167\text{ km/h}$ | $1.00$ |
 
-#### 4. Cloudburst Trigger Model (Flash Intensity Normalization)
-Grounded in the IMD scientific threshold defining a cloudburst as rainfall rate $\ge 100\text{ mm/hr}$ over a localized area:
+#### 4. Cloudburst Trigger Model (Illustrative High-Altitude Demo)
+Modeled on the IMD scientific criterion defining a cloudburst as localized convective precipitation exceeding $100\text{ mm/hr}$:
 
-$$T_{\text{cloudburst}} = \min\left(1.0, \, \frac{\text{Rainfall Rate (mm/hr)}}{100.0}\right)$$
+$$T_{\text{cloudburst}} = \begin{cases}
+1.00 & \text{if IMD Red Alert is active} \\
+\min\left(1.0, \, \frac{R_{1\text{h}}}{100.0}\right) & \text{if 1-hour rainfall gauge data is available} \\
+0.50 & \text{default convective radar threshold}
+\end{cases}$$
+
+*(Note: Per Architecture Decision 7, cloudburst is strictly demonstrated in illustrative non-Odisha high-altitude locations like Kedarnath, Uttarkashi, and Kinnaur to maintain meteorological integrity).*
 
 ---
 
-### 5.3 Carrying Capacity Stress Index (Habitation Level)
+### 5.3 Vulnerability & Historical Recurrence Formulations
 
-To assess whether a vulnerable habitation has exceeded its physical, demographic, and infrastructural carrying capacity during an impending hazard:
+#### Vulnerability Score ($V_i$)
+Combines demographic vulnerability ($V_{\text{demo}}$, ratio of elderly, children, and disabled individuals) and structural housing exposure ($K_{\text{pct}}$, ratio of non-engineered kutcha dwellings):
 
-$$CC_{\text{stress}} = \min\left(1.0, \, 0.35 \cdot \left(\frac{\rho_{\text{pop}}}{1000}\right) + 0.30 \cdot K_{\text{housing}} + 0.20 \cdot \left(1.0 - A_{\text{road}}\right) + 0.15 \cdot \left(\frac{\theta_{\text{slope}}}{45.0}\right)\right)$$
+$$V_i = \operatorname{clamp}\left(0.55 \cdot V_{\text{demo}} + 0.45 \cdot K_{\text{pct}}, \, 0.0, \, 1.0\right)$$
 
-Where:
-* $\rho_{\text{pop}}$ = Local habitation population density ($\text{persons/km}^2$)
-* $K_{\text{housing}}$ = Proportion of non-engineered Kutcha / mud-thatch housing structures ($[0.0, 1.0]$)
-* $A_{\text{road}}$ = Road accessibility index ($1.0$ = all-weather paved, $0.0$ = kutcha trail prone to severance)
-* $\theta_{\text{slope}}$ = Mean terrain slope angle in degrees
+#### Historical Recurrence Score ($H_i$)
+Evaluates historical disaster severity and recurring exposure over baseline records:
 
-When $CC_{\text{stress}} > 0.70$, the habitation's internal resilience is overwhelmed, and on-site shelter-in-place strategies are strictly disqualified.
+$$H_i = \operatorname{clamp}\left(\max(\text{Severities}) + \min(0.20, \, 0.05 \cdot N_{\text{events}}), \, 0.0, \, 1.0\right)$$
+
+If no prior disaster history is recorded, $H_i$ defaults to a baseline of $0.10$.
 
 ---
 
-### 5.4 Multi-Criteria Relocation Site Suitability & Allocation Algorithm
+### 5.4 Decision Logic, Trend Derivations & Alert Rules
 
-When habitations enter the **Red Zone**, the Relocation Engine evaluates all potential designated shelters $j \in \mathcal{S}$ and computes a Suitability Score:
+#### Operational Zonation Thresholds
+The composite score $R_i$ assigns the habitation into one of four operational color zones:
 
-$$\text{Suitability}(i, j) = 0.35 \cdot C_{ij} + 0.25 \cdot A_j + 0.25 \cdot I_j + 0.15 \cdot S_j$$
+$$\text{Zone}(R) = \begin{cases} 
+\mathbf{RED} & \text{if } R \ge 0.75 \quad \text{(Critical Hazard: Mandatory Immediate Relocation)} \\
+\mathbf{ORANGE} & \text{if } 0.50 \le R < 0.75 \quad \text{(High Alert: Pre-Position Evacuation Transport)} \\
+\mathbf{YELLOW} & \text{if } 0.30 \le R < 0.50 \quad \text{(Advisory Stage: Vigilant Telemetry Monitoring)} \\
+\mathbf{GREEN} & \text{if } R < 0.30 \quad \text{(Normal Baseline Status: Safe)}
+\end{cases}$$
 
-Subject to the **Hard Spatial Constraint**:
+#### Trigger Trend Derivations
+* **ACUTE:** $T_i \ge 0.90$ (Impending breach or destructive landfall)
+* **ELEVATED:** $0.50 \le T_i < 0.90$ (Active accumulation or warning stage)
+* **STABLE:** $T_i < 0.50$ (Sub-critical baseline conditions)
 
-$$\text{Distance}(j, \text{RedZone}_k) \ge D_{\text{safe\_buffer}} \quad (\ge 5.0\text{ km})$$
+#### Deterministic Alert Rule
+An alert is deterministically raised if and only if:
+
+$$\text{Alert Triggered} \iff \text{Zone} \in \{\mathbf{RED}, \mathbf{ORANGE}\} \land \text{Trend} \in \{\mathbf{ACUTE}, \mathbf{ELEVATED}\}$$
+
+#### Urgency Tier Lookup Table
+
+| Zone | Trigger Trend | Relocation Urgency Tier | Operational Response |
+| :--- | :--- | :--- | :--- |
+| **RED** | ACUTE | `IMMEDIATE` | Rapid mandatory evacuation to designated high-plinth safe shelter |
+| **RED** | ELEVATED | `IMMEDIATE` | Immediate phased evacuation dispatch |
+| **RED** | STABLE | `SHORT_TERM` | Pre-evacuation staging and readiness verification |
+| **ORANGE** | ACUTE | `SHORT_TERM` | Pre-position evacuation buses & sound warning sirens |
+| **ORANGE** | ELEVATED | `SHORT_TERM` | Alert community shelter managers & stage supplies |
+| **ORANGE** | STABLE | `MEDIUM_TERM` | Structural mitigation & embankment patrolling |
+| **YELLOW** | ANY | `MEDIUM_TERM` | Standard monitoring & drainage clearance |
+| **GREEN** | ANY | `MONITOR` | Baseline continuous surveillance |
+
+---
+
+### 5.5 Carrying Capacity Stress & Multi-Criteria Relocation Engine
+
+When habitations enter priority relocation tiers (`IMMEDIATE` or `SHORT_TERM`), the Relocation Engine (`backend/relocation_engine.py`) matches evacuees with candidate certified shelters using a **Greedy Capacity-Constrained Allocation Algorithm**.
+
+#### Multi-Criteria Site Suitability Scoring Formula
+For any candidate safe shelter $s$ evaluated for a village $h$ needing to relocate $P_h^{\text{rem}}$ persons, the suitability score $S(s, h) \in [0.0, 1.0]$ is computed deterministically:
+
+$$S(s, h) = \left[ 0.35 \cdot \text{Fit}(s, h) + 0.25 \cdot \frac{A_s}{10.0} + 0.25 \cdot \frac{I_s}{10.0} + 0.15 \cdot (1.0 - R_s^{\text{sec}}) \right] \times \mu_{\text{district}}$$
 
 Where:
-* $C_{ij} = \max\left(0.0, \, 1.0 - \frac{P_i}{\text{Capacity}_{\text{rem}}(j)}\right)$ = Capacity Fit Ratio
-* $A_j$ = Road Quality and Route Accessibility score of the connecting arterial corridor
-* $I_j$ = Infrastructure Readiness Index (Backup power, clean water reservoir, medical outpost presence)
-* $S_j$ = Secondary Hazard Safety Score (Elevation above flood plain, zero slope-instability risk)
+* $\text{Fit}(s, h) = \min\left(1.0, \, \frac{C_s^{\text{rem}}}{P_h^{\text{rem}}}\right)$ measures remaining capacity fit without overflow.
+* $A_s \in [0.0, 10.0]$ is road access connectivity and clearance for multi-axle evacuation transport.
+* $I_s \in [0.0, 10.0]$ is infrastructure readiness (backup power, potable water storage, sanitation, and medical triage).
+* $R_s^{\text{sec}} \in [0.0, 1.0]$ is secondary disaster threat risk (elevation above flood plain, zero slope instability). The term $(1.0 - R_s^{\text{sec}})$ acts as a **soft 15% weighted safety score**, ensuring that safer shelters score significantly higher without abruptly discarding edge-case shelters when all sites are constrained.
+* $\mu_{\text{district}}$ is the administrative jurisdiction multiplier:
+  $$\mu_{\text{district}} = \begin{cases} 1.00 & \text{if } \text{District}(s) = \text{District}(h) \text{ (Intra-district preference)} \\ 0.85 & \text{if } \text{District}(s) \neq \text{District}(h) \text{ (Inter-district fallback)} \end{cases}$$
 
-#### Multi-Shelter Spillover Resolution (Capacity-Constrained Dispatch)
-If a single designated shelter cannot accommodate population $P_i$ without exceeding $100\%$ capacity:
-1. Habitation population is split into sub-contingents $P_{i, 1}$ and $P_{i, 2}$.
-2. Primary vulnerable groups (elderly, pediatric, medical patients) are allocated to the nearest Tier-1 medicalized shelter.
-3. Remaining population is assigned to the next-highest ranked shelter having verified remaining capacity $\text{Capacity}_{\text{rem}} > P_{i, 2}$.
+#### Greedy Capacity-Constrained Allocation Execution
+1. **Target Selection:** Filters habitations requiring priority relocation (`relocation_urgency_tier` in `{"IMMEDIATE", "SHORT_TERM"}`).
+2. **Prioritization Ordering:**
+   - Level 1: Urgency Tier (`IMMEDIATE` strictly ahead of `SHORT_TERM`).
+   - Level 2: Composite Risk Score $R_i$ descending.
+   - Level 3: Habitation population descending.
+3. **Allocation Loop with Hard Capacity Limits:**
+   - For each target habitation needing relocation of $P_h^{\text{rem}}$ people:
+     - Candidate shelters are filtered for positive remaining capacity ($C_s^{\text{rem}} > 0$).
+     - Intra-district candidate shelters are evaluated first; if exhausted, inter-district shelters are considered.
+     - The highest-scoring candidate $s^*$ is selected.
+     - The allocation headcount is bounded by available capacity: $\Delta P = \min(P_h^{\text{rem}}, C_{s^*}^{\text{rem}})$.
+     - Shelter remaining capacity is updated: $C_{s^*}^{\text{rem}} \leftarrow C_{s^*}^{\text{rem}} - \Delta P$.
+     - If $P_h^{\text{rem}} > \Delta P$, a **split allocation** is triggered: the remaining cohort is reassigned to the next-highest ranked shelter, preventing shelter overcrowding while ensuring complete coverage.
+4. **Deterministic Auditable Explanation:**
+   - Every allocation produces an auditable plain-text explanation stating village name, urgency tier, assigned shelter, jurisdiction type, metric breakdown, and post-allocation shelter headroom.
 
 ---
 
 ## 6. Machine Learning Pipeline & Explainable AI (XAI)
 
-### 6.1 Model Architecture & Feature Space
+### 6.1 Model Architecture & 6-Dimensional Feature Space
 
-While the mathematical formula provides deterministic compliance with government rules, PUNARVAAS incorporates a supervised **Machine Learning Classifier** (`scikit-learn` Logistic Regression Pipeline) trained on multi-hazard incident records to perform probabilistic inference and pattern discovery.
+While the deterministic 4-layer formula guarantees strict compliance with government thresholds, PUNARVAAS incorporates a supervised **Machine Learning Classifier** (`scikit-learn` `LogisticRegression`) to provide an independent probabilistic validation signal.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        14-DIMENSIONAL FEATURE VECTOR                   │
-├────────────────────────────────┬───────────────────────────────────────┤
-│ Environmental & Hazard Features│ Demographic & Structural Vulnerability│
-├────────────────────────────────┼───────────────────────────────────────┤
-│ 1. Hazard Type (Encoded)       │ 8. Total Habitation Population        │
-│ 2. Intrinsic Susceptibility    │ 9. Kutcha Housing Percentage          │
-│ 3. 24-Hour Cumulative Rainfall │ 10. Elderly (>60 yr) Population Ratio │
-│ 4. River Gauge Relative Level  │ 11. Child (<5 yr) Population Ratio    │
-│ 5. Wind Speed (km/h)           │ 12. Road Connectivity Classification  │
-│ 6. Distance to Coastline (km)  │ 13. Medical Facility Proximity (km)   │
-│ 7. Terrain Slope (Degrees)     │ 14. Historical Disaster Hit Count     │
-└────────────────────────────────┴───────────────────────────────────────┘
-```
+#### 6-Dimensional Grounded Feature Vector
+Trained on normalized feature vectors matching `backend/ml_model.py`:
 
-* **Pipeline Structure:** `StandardScaler()` $\rightarrow$ `LogisticRegression(class_weight='balanced', max_iter=1000, random_state=42)`
-* **Output:** Calibrated Probability $P(\text{Red Zone} \mid X) \in [0.0, 1.0]$
-* **Artifact Persistence:** Serialized model `backend/app/models/model.pkl` with metadata validation.
+$$\mathbf{x}_i = \begin{bmatrix} S_i & T_i & V_{\text{demo}} & K_{\text{pct}} & H_i & D_{\text{shelter}} \end{bmatrix}^T$$
 
-### 6.2 Dual-Engine Verification
+| Feature Name | Symbol | Description & Scaling |
+| :--- | :--- | :--- |
+| **Static Hazard Susceptibility** | $S_i$ | Intrinsic terrain, slope, and elevation susceptibility $[0.0, 1.0]$ |
+| **Near-Term Trigger Intensity** | $T_i$ | Real-time hydrometeorological trigger level $[0.0, 1.0]$ |
+| **Demographic Vulnerability** | $V_{\text{demo}}$ | Proportion of vulnerable demographics (elderly, children, disabled) $[0.0, 1.0]$ |
+| **Kutcha Housing Ratio** | $K_{\text{pct}}$ | Proportion of non-engineered mud-thatch housing structures $[0.0, 1.0]$ |
+| **Disaster History Score** | $H_i$ | Historical recurrence frequency and severity $[0.0, 1.0]$ |
+| **Distance to Safe Shelter** | $D_{\text{shelter}}$ | Remoteness to certified shelter: $\min(1.0, \text{Distance}_{\text{km}} / 15.0)$ |
 
-PUNARVAAS employs a **Dual-Engine Architecture** to guarantee zero uninspected false positives or false negatives:
+* **Classifier Pipeline:** `LogisticRegression(class_weight='balanced', max_iter=1000, random_state=42)`
+* **Inference Output:** Probability $P(\text{High Risk} \mid \mathbf{x}_i) = \sigma(\mathbf{w}^T \mathbf{x}_i + b) \in [0.0, 1.0]$
+* **Persistence:** Serialized offline artifact `backend/model.pkl` loaded at server startup.
+
+---
+
+### 6.2 Dual-Engine Verification & Discrepancy Flagging (>0.15)
+
+PUNARVAAS employs a dual-engine architecture where the rule-based composite score $R_i$ and the statistical ML probability $P_i$ run in parallel:
 
 ```
                   ┌───────────────────────────────┐
@@ -319,22 +374,24 @@ PUNARVAAS employs a **Dual-Engine Architecture** to guarantee zero uninspected f
                                   │
      ┌────────────────────────────┼────────────────────────────┐
      ▼                            ▼                            ▼
-[ FULL CONSENSUS ]      [ CONSERVATIVE OVERRIDE ]      [ ANOMALY FLAGGED ]
-R_rule & P_ml agree     If Rule flags RED but ML      Discrepancy > 0.35
-Direct classification   predicts ORANGE: Escalates    logged for manual
-issued immediately.     to RED for life-safety.       expert audit.
+[ CONSISTENT ]          [ CONSERVATIVE OVERRIDE ]      [ REVIEW NEEDED ]
+|R_rule - P_ml| <= 0.15  If Rule flags RED but ML      |R_rule - P_ml| > 0.15
+Direct classification  predicts lower: Rule flags    Flagged with visual badge
+issued immediately.    RED for life safety.          for human expert review.
 ```
 
-### 6.3 Explainable AI (XAI)
+* **Discrepancy Threshold:** When $|R_i - P_i| > 0.15$, the UI displays an amber **"Review Needed"** badge. This alerts officials to inspect atypical local attributes (such as remote shelter distance or anomalous housing structures) where statistical trends diverge from rule thresholds.
 
-In high-stakes disaster operations, black-box predictions are unacceptable to District Magistrates. PUNARVAAS provides **Local Feature Contribution Explanations** for every inference:
+---
 
-$$\text{Contribution}_k = \beta_k \cdot \left(\frac{x_k - \mu_k}{\sigma_k}\right)$$
+### 6.3 Explainable AI (Feature Contribution Attribution)
 
-Where $\beta_k$ is the learned regression coefficient, and $\mu_k, \sigma_k$ are scaler normalization parameters.
+PUNARVAAS extracts feature contribution scores directly from the model weights:
 
-The platform automatically compiles these mathematical contributions into **Natural-Language Rationales** rendered directly on the UI:
-> *"Habitation **Kandhamal-H-07** flagged as **RED ZONE** (Confidence: 91.4%). Primary drivers: 24-hr antecedent rainfall exceeded GSI critical threshold (168 mm vs 150 mm limit, +42% contribution), combined with steep terrain slope (34°, +28% contribution) and high kutcha housing vulnerability (78%, +18% contribution)."*
+$$\text{Contribution}_{i, j} = w_j \cdot x_{i, j}$$
+
+The top contributing features are mapped to human-readable domain labels and displayed directly on the habitation inspection panel:
+> *"Habitation **Kandhamal-H-07** flagged as **RED ZONE**. Primary risk drivers: Near-term Trigger Intensity (+42% contribution), Static Hazard Susceptibility (+28% contribution), and Kutcha Housing Ratio (+18% contribution)."*
 
 ---
 
@@ -345,7 +402,7 @@ The platform automatically compiles these mathematical contributions into **Natu
 ```
                                   PUNARVAAS SYSTEM ARCHITECTURE
                                   
-  DATA SOURCES & SIMULATION           CORE COMPUTATION & STORAGE           CLIENT INTERFACES
+  DATA SOURCES (SYNTHETIC MODE)       CORE COMPUTATION & STORAGE           CLIENT INTERFACES
   
  ┌─────────────────────────┐        ┌─────────────────────────────┐        ┌─────────────────────────┐
  │ • GSI Susceptibility    │        │      FASTAPI APPLICATION    │        │  VITE + REACT DASHBOARD │
@@ -354,75 +411,88 @@ The platform automatically compiles these mathematical contributions into **Natu
  │ • Census 2011 Data      │ (REST) │    (4-Layer Bounded Eq)     │ (JSON) │   GIS Map & Buffers     │
  │ • Scenario Generator    │        │ 2. ML & XAI Pipeline        │        │ • Habitation Triage List│
  └─────────────────────────┘        │    (scikit-learn + Weights) │        │ • Carrying Capacity Metr│
-                                    │ 3. Relocation Optimizer     │        │ • Shelter Capacity Bars │
- ┌─────────────────────────┐        │    (Multi-Shelter Knapsack) │        │ • Recharts Risk Curves  │
+                                    │ 3. Relocation Engine        │        │ • Shelter Capacity Bars │
+ ┌─────────────────────────┐        │    (Greedy Allocation)      │        │ • Recharts Risk Curves  │
  │  HUMAN-IN-THE-LOOP      │        │ 4. Evacuation State Machine │        └─────────────────────────┘
  │  OFFICIAL SIGN-OFF      │───────>│    (Uncontacted -> Check-In)│                     │
  └─────────────────────────┘        └──────────────┬──────────────┘                     ▼
                                                    │                       ┌─────────────────────────┐
                                                    ▼                       │   FIELD DISPATCH OUTPUT │
                                     ┌─────────────────────────────┐        │                         │
-                                    │     SQLITE / POSTGIS        │        │ • Actionable CSV Roster │
-                                    │  • habitations (150+ rows)  │        │ • Evacuation Manifests  │
-                                    │  • shelters (15 rows)       │        │ • Automated CAP-Alert   │
-                                    │  • risk_logs & audit_trail  │        │   Payloads (SMS/Siren)  │
+                                    │      SQLITE DATABASE        │        │ • Actionable CSV Roster │
+                                    │  • habitations (150 rows)   │        │ • Evacuation Manifests  │
+                                    │  • safe_sites (15 shelters) │        │ • Blocker Escalations   │
+                                    │  • alerts & operation_events│        │ • Audit Ledger Records  │
                                     └─────────────────────────────┘        └─────────────────────────┘
 ```
 
+---
+
 ### 7.2 Backend Micro-Services & API Contracts
 
-The backend is engineered with **FastAPI (Python 3.11)**, providing asynchronous non-blocking endpoints, automatic OpenAPI documentation, and strict Pydantic data contract validation:
+Engineered with **FastAPI (Python 3.11)**, providing high throughput, automatic OpenAPI documentation, and strict Pydantic v2 data contract validation:
 
-* `GET /api/dashboard/summary`: Aggregates district-wide Red/Orange/Yellow counts, total threatened population, shelter capacity occupancy, and active scenario metadata.
-* `GET /api/habitations`: Returns geospatial points, demographics, vulnerability scores, and current dynamic risk status for all 150+ habitations.
-* `POST /api/risk/evaluate`: Dynamic recalculation endpoint accepting real-time rainfall, water level, or wind speed overrides.
-* `POST /api/ml/predict`: Runs inference through the serialized Logistic Regression pipeline and computes explainability weights.
-* `GET /api/relocation/plan`: Triggers the constraint-aware relocation optimization algorithm and generates shelter allocation pairings.
-* `POST /api/evacuation/signoff`: Human-in-the-loop executive approval endpoint recording officer credentials, timestamp, and authorization hash.
-* `GET /api/evacuation/export`: Generates downloadable operational CSV dispatch manifests for ground response teams.
-* `GET /api/scenarios`: Returns pre-configured historical disaster scenarios (Cyclone Fani, Baitarani Flood, Kandhamal Landslide).
+* `GET /api/stats`: Returns overall system statistics: total habitations, monitored districts, Red/Orange/Yellow counts, and synthetic mode status.
+* `GET /api/habitations`: Returns complete geospatial coordinates, demographic breakdowns, vulnerability scores, and current dynamic risk status for all habitations.
+* `GET /api/alerts`: Returns active emergency alerts with severity tags, trigger descriptions, and deterministic rationales.
+* `GET /api/capacity`: Returns shelter capacity utilization, remaining headroom, and infrastructure readiness flags across all monitored shelters.
+* `GET /api/relocation/plan`: Triggers the greedy capacity-constrained allocation algorithm and returns shelter assignments with auditable explanations.
+* `POST /api/scenarios/judge-demo`: Mandatory one-click evaluation endpoint executing an authentic Orange $\rightarrow$ Red escalation scenario on Baitarani river gauge telemetry.
+* `POST /api/evacuation/signoff`: Human-in-the-loop executive sign-off endpoint recording official credentials, designation, and timestamp.
+* `GET /api/evacuation/export`: Generates downloadable CSV dispatch manifests formatted for field teams.
+
+---
 
 ### 7.3 Frontend GIS & Situational Dashboard
 
-Built with **React 18** and **Vite 5**, styled using modern responsive **Tailwind CSS**, and rendered via **Leaflet / React-Leaflet**:
-* **Optimized Canvas Rendering:** Renders 150+ dynamic geo-markers and shelter overlays at 60 FPS without frame drops.
-* **Spatial Clustering & Safe-Buffer Visualization:** Highlights $5.0\text{ km}$ exclusion rings around Red Zone habitations to verify shelter safety.
-* **Interactive Disaster Scenario Slider:** Allows incident commanders to simulate rising flood gauge levels or approaching cyclone winds in real-time, observing live zone transitions.
-* **Accessible Visual Hierarchy:** Strict adherence to high-contrast disaster palette (Red `#EF4444`, Orange `#F97316`, Yellow `#EAB308`, Green `#22C55E`).
+Built with **React 18** and **Vite 5**, styled with custom semantic Tailwind CSS tokens adhering strictly to Emergency Operations Center ergonomics:
 
-### 7.4 Relational Database Schema
+* **Leaflet GIS Integration:** Optimized marker rendering and smooth viewport panning across hundreds of habitations with dynamic color-coded severity markers (`#C13F3F` Red, `#D97A2E` Orange, `#E0B33C` Yellow, `#3F8F5F` Green).
+* **Click-Through Inspection Drawer:** Clicking any habitation slides open a detailed breakdown displaying the 4-layer score composition, ML cross-validation agreement, and top contributing risk factors.
+* **Operations Execution Board:** Interactive Kanban triage state machine tracking evacuee cohorts through `UNCONTACTED` $\rightarrow$ `CONTACTED` $\rightarrow$ `PICKED_UP` $\rightarrow$ `CHECKED_IN` with structured blocker escalation tools.
+
+---
+
+### 7.4 Relational Database Schema (SQLite / PostGIS-Ready)
+
+Grounded in `backend/database.py`:
 
 ```
 ┌─────────────────────────────────┐           ┌─────────────────────────────────┐
-│          habitations            │           │            shelters             │
+│          habitations            │           │           safe_sites            │
 ├─────────────────────────────────┤           ├─────────────────────────────────┤
-│ id (PK, String)                 │           │ id (PK, String)                 │
-│ name (String)                   │           │ name (String)                   │
-│ district (String)               │           │ district (String)               │
-│ latitude (Float)                │           │ latitude (Float)                │
-│ longitude (Float)               │           │ longitude (Float)               │
-│ hazard_type (String)            │           │ total_capacity (Integer)        │
-│ population (Integer)            │           │ current_occupancy (Integer)     │
-│ kutcha_housing_pct (Float)      │           │ medical_staff_available (Bool)  │
-│ intrinsic_susceptibility (Float)│           │ power_backup (Bool)             │
-│ road_connectivity (String)      │           │ water_purification (Bool)       │
-│ historical_disaster_hits (Int)  │           │ road_accessibility_score (Float)│
+│ habitation_id (PK, TEXT)        │           │ site_id (PK, TEXT)              │
+│ district (TEXT)                 │           │ name (TEXT)                     │
+│ village (TEXT)                  │           │ district (TEXT)                 │
+│ hazard_type (TEXT)              │           │ usable_capacity (INTEGER)       │
+│ zone (TEXT: RED/ORANGE/...)     │           │ capacity_persons (INTEGER)      │
+│ composite_risk_score (REAL)     │           │ lat, lon (REAL)                 │
+│ ml_risk_probability (REAL)      │           │ access_score (REAL: 0-10)       │
+│ trigger_trend (TEXT)            │           │ infrastructure_score (REAL:0-10)│
+│ relocation_urgency_tier (TEXT)  │           │ secondary_risk_score (REAL:0-1) │
+│ is_illustrative (INTEGER)       │           │ has_water, has_power (INTEGER)  │
+│ data_json (TEXT)                │           │ has_sanitation, has_medical(INT)│
+│ updated_at (TIMESTAMP)          │           │ notes (TEXT)                    │
 └────────────────┬────────────────┘           └────────────────┬────────────────┘
                  │                                             │
                  │ 1                                           │ 1
                  │                                             │
                  │ N                                           │ N
 ┌────────────────┴────────────────┐           ┌────────────────┴────────────────┐
-│      evacuation_manifests       │           │          system_logs            │
+│        evacuation_cases         │           │        operation_events         │
 ├─────────────────────────────────┤           ├─────────────────────────────────┤
-│ id (PK, Integer)                │           │ id (PK, Integer)                │
-│ habitation_id (FK)              │           │ timestamp (DateTime)            │
-│ shelter_id (FK)                 │           │ level (INFO / WARN / ALERT)     │
-│ evacuee_count (Integer)         │           │ module (String)                 │
-│ status (UNCONTACTED / ... )     │           │ message (String)                │
-│ assigned_buses (Integer)        │           │ action_taken (String)           │
-│ signed_off_by (String)          │           └─────────────────────────────────┘
-│ updated_at (DateTime)           │
+│ case_id (PK, TEXT)              │           │ event_id (PK, INTEGER AUTO)     │
+│ operation_id (TEXT)             │           │ operation_id (TEXT)             │
+│ allocation_id (TEXT)            │           │ case_id (TEXT, FK)              │
+│ habitation_id (TEXT, FK)        │           │ from_status, to_status (TEXT)   │
+│ village, district (TEXT)        │           │ actor_name (TEXT)               │
+│ urgency_tier (TEXT)             │           │ blocker_category (TEXT)         │
+│ allocated_headcount (INTEGER)   │           │ resource_requested (TEXT)       │
+│ site_id, site_name (TEXT)       │           │ note (TEXT)                     │
+│ status (UNCONTACTED / ...)      │           │ occurred_at (TEXT)              │
+│ blocker_category (TEXT)         │           └─────────────────────────────────┘
+│ resource_requested (TEXT)       │
+│ updated_at (TEXT)               │
 └─────────────────────────────────┘
 ```
 
@@ -432,122 +502,88 @@ Built with **React 18** and **Vite 5**, styled using modern responsive **Tailwin
 
 | Layer | Technology | Architectural Rationale & Justification |
 | :--- | :--- | :--- |
-| **Backend Core** | **Python 3.11** | Rich scientific data ecosystem (`numpy`, `pandas`, `scipy`), native ML integration, and robust concurrency. |
-| **API Framework** | **FastAPI** | High throughput ($20,000+\text{ req/sec}$), automatic Pydantic serialization, native async execution, and auto-generated Swagger UI. |
-| **Database** | **SQLite 3 / SQLAlchemy** | Zero-latency, self-contained single-file architecture ensuring 100% offline edge-readiness for field EOCs; directly migratable to PostGIS. |
-| **Machine Learning** | **scikit-learn** | Highly interpretable, deterministic linear boundaries, negligible CPU inference latency ($< 1\text{ ms}$), and zero dependency on heavy GPU infrastructure. |
-| **Frontend Runtime** | **React 18 + Vite 5** | Instant Hot Module Replacement (HMR), component-driven UI architecture, and efficient DOM reconciliation during high-frequency live telemetry updates. |
-| **Styling & UI** | **Tailwind CSS** | Atomic styling utility providing bespoke, sleek dark-mode aesthetics, responsive grid layouts, and zero runtime CSS overhead. |
-| **Geospatial Mapping** | **Leaflet & React-Leaflet** | Lightweight client-side GIS rendering ($< 40\text{ KB}$ bundle) that operates reliably without requiring paid Google Maps or Mapbox API keys. |
-| **Analytics Charts** | **Recharts** | SVG-based responsive data visualization for carrying capacity stress curves, historical return periods, and model confusion matrices. |
+| **Backend Core** | **Python 3.11** | Rich scientific computing libraries (`numpy`, `scipy`), native ML toolkits, clean functional typing. |
+| **API Framework** | **FastAPI** | High throughput, asynchronous non-blocking request handling, automatic OpenAPI/Swagger generation. |
+| **Database** | **SQLite 3** | Zero-configuration single-file portability; eliminates external database service dependencies during live evaluations; direct schema parity with PostgreSQL/PostGIS. |
+| **Machine Learning** | **scikit-learn** | Highly interpretable `LogisticRegression` pipeline, sub-millisecond CPU inference latency, zero requirement for GPU infrastructure. |
+| **Frontend Runtime** | **React 18 + Vite 5** | High-performance client-side rendering, instant Hot Module Replacement, and modular component hierarchy. |
+| **Styling & UI** | **Tailwind CSS** | Custom semantic palette strictly enforcing emergency operations center ergonomics (muted canvas `#EDF0F2`, high-contrast alert tokens). |
+| **Geospatial Mapping** | **Leaflet & React-Leaflet** | Lightweight client-side GIS mapping operating fully offline without commercial third-party API dependencies. |
+| **Analytics Charts** | **Recharts** | Declarative SVG data visualization for sparklines, feature importance bars, and capacity stress indicators. |
 
 ---
 
 ## 9. Research Grounding & Real-World Domain Data
 
 ### 9.1 Geological Survey of India (GSI) Landslide Thresholds
-* **Empirical Standard:** Landslide early warning systems deployed by the GSI in the Western Ghats and Nilgiris utilize rainfall thresholds calibrated to cumulative rainfall over a 72-hour duration combined with 24-hour antecedent saturation.
-* **PUNARVAAS Grounding:** Incorporates GSI's $150.0\text{ mm/day}$ critical rainfall initiation trigger. Modeled in the pilot district of **Kandhamal**, Odisha (Eastern Ghats escarpment).
+* **Empirical Standard:** GSI's Landslide Early Warning System (LEWS) establishes that catastrophic slope failures in Indian hill terrains are triggered by single-day rainfall events reaching **130–150 mm**.
+* **PUNARVAAS Grounding:** Uses $150.0\text{ mm}$ as the conservative normalization denominator in $T_{\text{landslide}} = \min(1.0, R_{24\text{h}} / 150.0)$. Calibrated across the Eastern Ghats hill terrain of **Kandhamal**, Odisha.
 
 ### 9.2 Central Water Commission (CWC) River Gauge Baselines
-* **Empirical Standard:** The CWC operates a national hydrological telemetry network with calibrated river stage levels: Normal $\rightarrow$ Warning Level ($\text{WL}$) $\rightarrow$ Danger Level ($\text{DL}$) $\rightarrow$ Highest Flood Level ($\text{HFL}$).
-* **PUNARVAAS Grounding:** Uses real-world river gauge baselines from the **Baitarani River** at the Anandapur / Akhuapada gauge stations in **Kendrapara**, Odisha:
-  * Normal: $88.00\text{ m}$
-  * Warning Level: $91.20\text{ m}$
-  * Danger Level: $92.40\text{ m}$
-  * High Flood Level (HFL): $94.35\text{ m}$ (recorded during historic floods)
+* **Empirical Standard:** The CWC operates hydrologic gauge stations across river basins with established Warning Levels, Danger Levels, and historic Highest Flood Levels (HFL).
+* **PUNARVAAS Grounding:** Grounded in real-world gauge datums from the **Baitarani River** at Akhuapada station (**Kendrapara**, Odisha):
+  * Baseline Normal Level: $88.00\text{ m}$
+  * CWC Warning Level: $91.20\text{ m}$
+  * CWC Danger Level: $92.40\text{ m}$
+  * Historical Highest Flood Level (HFL): $94.35\text{ m}$
 
-### 9.3 India Meteorological Department (IMD) Cyclone & Rainfall Classifications
-* **Empirical Standard:** IMD Regional Specialized Meteorological Centre (RSMC) tropical cyclone classifications based on 3-minute sustained surface winds.
-* **PUNARVAAS Grounding:** Direct mapping to coastal Odisha storms (**Puri** and **Ganjam** districts) calibrated against actual cyclone tracks:
-  * *Cyclone Fani (2019):* Category 5 equivalent, $215\text{ km/h}$ winds, severe storm surge penetrating $5\text{ km}$ inland.
-  * *Super Cyclone 05B (1999):* Sustained winds $> 260\text{ km/h}$, $10\text{ m}$ storm surge.
-  * *Cyclone Phailin (2013), Titli (2018), Yaas (2021), Dana (2024).*
+### 9.3 India Meteorological Department (IMD) Cyclone Classifications
+* **Empirical Standard:** IMD storm classification based on maximum sustained surface wind speeds (3-minute average).
+* **PUNARVAAS Grounding:** Maps storm alerts directly across coastal pilot districts (**Puri** and **Ganjam**), calibrated against authentic cyclone tracks (Super Cyclone 1999, Phailin 2013, Fani 2019, Yaas 2021).
 
 ### 9.4 Socio-Demographic Indicators & Housing Vulnerability
-* **Empirical Standard:** Census of India 2011 and Socio-Economic and Caste Census (SECC) housing tables.
-* **PUNARVAAS Grounding:** High weight ($0.25$) assigned to structural housing vulnerability: habitations with $> 60\%$ non-engineered kutcha dwellings (mud walls, unreinforced thatch/asbestos roofs) suffer severe destruction at wind speeds $> 90\text{ km/h}$ or inundation depths $> 0.5\text{ m}$.
+* **Empirical Standard:** Census of India 2011 village PCA tables and BMTPC Vulnerability Atlas.
+* **PUNARVAAS Grounding:** Socio-physical vulnerability formulation weights kutcha housing ratio at $45\%$ and demographic dependency (elderly, infants, disabled) at $55\%$, reflecting differential vulnerability during rapid inundation.
 
-### 9.5 Pilot District Calibrations (Odisha Focus)
+### 9.5 Pilot District Calibrations & Shelter Distribution (12 vs 15)
+
+To ensure complete clarity across all documentation and code:
+* **The system database contains exactly 15 certified safe shelters** with an aggregate usable capacity of **33,800 persons**.
+* **12 shelters** are located across the **4 Odisha pilot districts** (usable capacity: **28,500 persons**).
+* **3 shelters** are designated as **illustrative high-altitude staging centers** (usable capacity: **5,300 persons**) to demonstrate non-Odisha landslide and cloudburst capabilities in northern hill states.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────────────┐
-│                                PILOT DISTRICT CALIBRATION                               │
-├───────────────┬────────────────────┬──────────────┬────────────┬────────────────────────┤
-│ District      │ Primary Hazard     │ Habitations  │ Shelters   │ Calibration Reference  │
-├───────────────┼────────────────────┼──────────────┼────────────┼────────────────────────┤
-│ Puri          │ Cyclone / Surge    │ 45           │ 4          │ IMD Cyclone Fani       │
-│ Kendrapara    │ Riverine Flood     │ 35           │ 4          │ CWC Baitarani Gauge    │
-│ Ganjam        │ Cyclone / Flood    │ 35           │ 4          │ IMD Cyclone Phailin    │
-│ Kandhamal     │ Landslide / Debris │ 35           │ 3          │ GSI 150mm Rainfall     │
-├───────────────┼────────────────────┼──────────────┼────────────┼────────────────────────┤
-│ TOTALS        │ Multi-Hazard       │ 150+         │ 15         │ Total Capacity: 33,800 │
-└───────────────┴────────────────────┴──────────────┴────────────┴────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                             CERTIFIED SAFE SHELTER DISTRIBUTION                             │
+├───────────────┬──────────────────────┬─────────────┬──────────┬─────────────┬───────────────┤
+│ District      │ Primary Hazard       │ Habitations │ Shelters │ Usable Cap. │ Target Type   │
+├───────────────┼──────────────────────┼─────────────┼──────────┼─────────────┼───────────────┤
+│ Puri          │ Cyclone / Surge      │ 45          │ 3        │ 7,200       │ Pilot Active  │
+│ Kendrapara    │ Riverine Flood       │ 35          │ 3        │ 6,500       │ Pilot Active  │
+│ Ganjam        │ Cyclone / Flood      │ 35          │ 3        │ 7,800       │ Pilot Active  │
+│ Kandhamal     │ Landslide            │ 35          │ 3        │ 7,000       │ Pilot Active  │
+├───────────────┼──────────────────────┼─────────────┼──────────┼─────────────┼───────────────┤
+│ ODISHA TOTAL  │ Multi-Hazard Pilot   │ 150         │ 12       │ 28,500      │ Core Pilot    │
+├───────────────┼──────────────────────┼─────────────┼──────────┼─────────────┼───────────────┤
+│ Rudraprayag   │ Cloudburst (Demo)    │ 1           │ 1        │ 2,000       │ Illustrative  │
+│ Uttarkashi    │ Cloudburst (Demo)    │ 1           │ 1        │ 1,800       │ Illustrative  │
+│ Kinnaur       │ Rockfall/Slide (Demo)│ 1           │ 1        │ 1,500       │ Illustrative  │
+├───────────────┼──────────────────────┼─────────────┼──────────┼─────────────┼───────────────┤
+│ GRAND TOTAL   │ All Monitored Sites  │ 153         │ 15       │ 33,800      │ Full Database │
+└───────────────┴──────────────────────┴─────────────┴──────────┴─────────────┴───────────────┘
 ```
-*(Note: System also includes non-Odisha illustrative habitations in Uttarakhand and Himachal Pradesh for cloudburst validation).*
 
 ---
 
 ## 10. Comprehensive Feature Walkthrough (8 Functional Modules)
 
-### Module 1: Situational Awareness & Executive KPI Dashboard
-* **Real-Time Hazard Metric Badges:** Instantly shows total habitations under surveillance, active Red Zone count, vulnerable citizens requiring relocation, and aggregated shelter occupancy status.
-* **Dynamic Status Feed:** Logs real-time sensor events (e.g., *"Baitarani gauge breached Danger Level 92.40m at 14:02 IST"*).
-
-### Module 2: Dynamic GIS Red Zone Map Explorer
-* **Multi-Hazard Layer Toggles:** Filter habitations and hazard envelopes by Landslide, Riverine Flood, Tropical Cyclone, or Cloudburst.
-* **Interactive Inspection Popups:** Clicking any habitation reveals its complete micro-profile: population breakdown, kutcha housing ratio, road status, intrinsic susceptibility, and active trigger values.
-* **Safe Shelter Buffers:** Visualizes $5.0\text{ km}$ safety exclusion rings around active hazard zones to guarantee that designated evacuation sites remain hazard-free.
-
-### Module 3: Machine Learning Risk Predictor & Explainable AI (XAI)
-* **Custom Parameter Testing:** Allows disaster analysts to input arbitrary rainfall values, wind speeds, or river stage depths to test model sensitivity.
-* **Interactive Probability Gauges:** Displays continuous confidence percentages alongside binary classifications.
-* **Feature Importance Waterfall:** Renders visual bar charts depicting exactly which environmental or demographic variables drove the risk score into the Red Zone.
-
-### Module 4: Carrying Capacity Stress & Relocation Planner
-* **Habitation Stress Diagnostics:** Pinpoints habitations where high demographic density and weak infrastructure make in-situ shelter-in-place strategies dangerous.
-* **Algorithmic Shelter Matching:** Automatically computes optimal habitation-to-shelter assignments based on capacity, distance, and road quality.
-* **Capacity Overload Protection:** Progress bars visually track shelter intake; automatically redirects overflow to secondary backup shelters before any shelter reaches $100\%$ capacity.
-
-### Module 5: Evacuation Operations Board (Triage State Machine)
-* **Interactive Kanban Board:** Tracks habitations through four mission-critical operational states:
-  1. `UNCONTACTED`: Early warning generated; field team awaiting acknowledgment.
-  2. `CONTACTED`: Local Panchayat / Village Disaster Management Committee notified.
-  3. `IN_TRANSIT`: Evacuation buses/ambulances en route; road transit active.
-  4. `CHECKED_IN`: Citizens registered and safely sheltered at designated facility.
-* **Blockade Escalation:** Allows field teams to flag road blockades (`BLOCKED`), immediately prompting the system to recalculate alternate evacuation routes.
-
-### Module 6: Historical Scenario Simulator & Replay
-* **Disaster Replay Engine:** Load authentic historical disaster parameters (Cyclone Fani 2019, Baitarani Flood 2020, Kandhamal Landslide 2022) with a single click.
-* **Dynamic Parameter Sliders:** Interactively scale rainfall from $0\text{ mm}$ to $350\text{ mm}$ or wind speed from $20\text{ km/h}$ to $250\text{ km/h}$ and observe instantaneous color transitions on the GIS map.
-
-### Module 7: Real-Time Early Warning & Siren Broadcast Stubs
-* **Multi-Channel Alert Payloads:** Automatically formats emergency bulletins for SMS, WhatsApp broadcast lists, and village public address sirens.
-* **Standardized Alert Categorization:** Classifies advisories in accordance with National Disaster Management Guidelines (RED ALERT, EVACUATE NOW, ADVISORY).
-
-### Module 8: Official Governance, Audit Trail & Export Center
-* **Human-in-the-Loop Sign-Off:** Provides an executive authorization dialog where District Magistrates or Incident Commanders sign off with officer credentials before dispatch manifests are issued.
-* **Ground Dispatch CSV Export:** One-click export of structured evacuation rosters detailing habitation names, headcounts, assigned shelters, bus requirements, and route notes for ground teams.
-* **Immutable Audit Trail:** Logs every risk calculation, parameter modification, and evacuation state transition with precise timestamps for post-disaster administrative review.
+1. **Persistent Operations Status Bar:** Displays real-time alert tallies, active monitored districts, system synchronization timestamp, and the mandatory permanent **Synthetic Data Mode** indicator.
+2. **Priority Alerts & Warnings Tab:** Filterable by hazard, severity, and district; provides 5-day historical trigger sparklines, affected habitation metrics, and official deterministic rationales.
+3. **Mandatory One-Click Judge Demo Mode:** Executes an authentic Orange $\rightarrow$ Red escalation scenario on Baitarani river gauge telemetry with zero external API dependencies.
+4. **Interactive GIS Map Explorer:** Full-screen Leaflet map with custom marker clustering, color-coded risk envelopes, and slide-out side drawers detailing 4-layer metric breakdowns.
+5. **Dual-Layer Explainable AI (XAI):** Real-time inference using the offline `LogisticRegression` pipeline; cross-validates ML probabilities against rule scores and flags divergences $> 0.15$ with **"Review Needed"** badges.
+6. **Habitation Directory:** Searchable, sortable tabular registry of all monitored settlements with pagination and demographic breakdowns.
+7. **Explainable Relocation Decision Support:** Greedy capacity-constrained allocation matching high-urgency settlements (`IMMEDIATE` and `SHORT_TERM`) with certified safe shelters under strict capacity safeguards, producing auditable assignment explanations.
+8. **Verified Evacuation Execution Board (V2 Core):** Operational triage state machine tracking evacuee cohorts through `UNCONTACTED` $\rightarrow$ `CONTACTED` $\rightarrow$ `PICKED_UP` $\rightarrow$ `CHECKED_IN`, complete with structured blocker escalation tools (`ROAD_INUNDATED`, `TRANSPORT_UNAVAILABLE`, `MEDICAL_URGENT`), shelter readiness heartbeats, and immutable audit logging.
 
 ---
 
 ## 11. Feasibility Analysis
 
-### 11.1 Technical Feasibility
-* **Zero External API Dependency for Core Operations:** PUNARVAAS is engineered to function autonomously in air-gapped Emergency Operations Centers. When external communications are severed during severe storms, the platform continues computing risk using cached baseline data and local telemetry feeds.
-* **Ultra-Low Compute Footprint:** The entire backend runs efficiently on standard commodity hardware (minimum requirements: 2 CPU cores, 4 GB RAM), eliminating the need for expensive GPU clusters.
-* **Standard Web Technologies:** Built on standard web protocols (HTTP/REST, JSON, HTML5 Canvas), ensuring zero client-side installation overhead across district control rooms.
-
-### 11.2 Operational Feasibility
-* **Intuitive User Experience:** Designed specifically for high-stress crisis conditions; avoids complex GIS command lines in favor of clear, color-coded visual cards and click-to-act workflows.
-* **Field-Ready Outputs:** Ground response teams are not required to carry laptops; the platform generates clean, printable, tabular CSV dispatch manifests containing all essential logistics info.
-
-### 11.3 Economic & Financial Feasibility
-* **100% Open-Source Software Stack:** Zero licensing costs. Operates entirely on open-source frameworks (Python, FastAPI, SQLite, React, Leaflet, Tailwind CSS), saving crores of rupees in commercial GIS enterprise licensing for cash-constrained state disaster authorities.
-
-### 11.4 Legal & Policy Feasibility
-* **Direct Alignment with Disaster Management Act (2005):** Fulfills Section 30 and Section 39 mandates requiring District and State Authorities to formulate proactive disaster mitigation plans, identify vulnerable habitations, and ensure adequate shelter capacity.
+* **Technical Feasibility:** 100% self-contained Python + SQLite + React architecture running with zero external API dependencies. Operates seamlessly in air-gapped emergency environments on standard commodity hardware.
+* **Operational Feasibility:** Tailored specifically for high-stress crisis management; replaces confusing multi-layer GIS desktop software with clear, actionable, color-coded visual workflows and printable CSV field manifests.
+* **Economic Feasibility:** Built entirely on open-source frameworks (Python, FastAPI, SQLite, React, Leaflet, Tailwind CSS), eliminating recurring commercial GIS licensing fees for state disaster management authorities.
+* **Legal Feasibility:** Complies directly with the statutory mandates of the **Disaster Management Act, 2005** (Sections 30 and 39) regarding proactive mitigation, hazard zonation, and shelter capacity planning.
 
 ---
 
@@ -561,24 +597,13 @@ Built with **React 18** and **Vite 5**, styled using modern responsive **Tailwin
 │ (CURRENT STATUS)        │ (MONTHS 1 - 6)             │ (MONTHS 6 - 18)                 │
 ├─────────────────────────┼────────────────────────────┼─────────────────────────────────┤
 │ • 4 Pilot Districts     │ • PostGIS database upgrade │ • Integration with NDMA National│
-│   (Odisha Focus)        │ • Live IMD / CWC API webhooks│   Disaster Management Grid     │
-│ • 150+ Habitations      │ • ISRO Bhuvan WMS / WFS    │ • Common Alerting Protocol (CAP)│
-│ • 15 Shelters           │   high-res satellite tiles │   integration with Sachet portal│
-│ • Interactive Simulation│ • Role-based auth (OAuth2) │ • Offline-first mobile field app│
-│ • Complete XAI Pipeline │ • Field testing with OSDMA │   for NDRF / SDRF teams         │
+│   (Odisha Focus)        │ • Live IMD / CWC API feeds │   Disaster Management Grid     │
+│ • 150 Habitations       │ • ISRO Bhuvan satellite WMS│ • Common Alerting Protocol (CAP)│
+│ • 15 Shelters           │ • OAuth2 Role-Based Access │   integration with Sachet portal│
+│ • Deterministic XAI     │ • Field pilot with OSDMA   │ • Offline-first mobile field app│
+│ • Complete State Machine│ • Automated SMS/Siren stubs│   for NDRF / SDRF battalions    │
 └─────────────────────────┴────────────────────────────┴─────────────────────────────────┘
 ```
-
-### Path to Full Enterprise Scale
-
-1. **Database Migration to PostGIS:**
-   While SQLite provides ideal zero-configuration portability for edge EOCs, production enterprise deployment will migrate the schema to **PostgreSQL + PostGIS**. This enables high-performance spatial indexing (`ST_DWithin`, `ST_Contains`) across millions of habitations nationwide.
-2. **Integration with ISRO Bhuvan Spatial Services:**
-   Direct integration with ISRO's Bhuvan Web Map Services (WMS) and Web Feature Services (WFS) to overlay official high-resolution Topographical, Geomorphological, and Land-Use land-cover vector contours.
-3. **Automated Hydrometeorological Telemetry Ingestion:**
-   Establishment of automated cron and message-queue workers polling IMD's AWS (Automatic Weather Station) APIs and CWC's Hydrological Observation stations every 15 minutes.
-4. **Integration with India's Common Alerting Protocol (CAP / Sachet):**
-   Formatting outgoing evacuation alerts into ITU-T Recommendation X.1303 CAP XML schemas for automated dissemination via the national **Sachet** portal, cell broadcasts, and telecom SMS gateways.
 
 ---
 
@@ -595,68 +620,49 @@ Built with **React 18** and **Vite 5**, styled using modern responsive **Tailwin
 │ Shelter Overcrowding Incidents │ Common (30-50%) │ Zero (Load-Balanced)│
 │ Post-Disaster Loss of Life     │ High Vulnerab.  │ Preventable Zero    │
 │ Evacuation Manifest Generation │ Manual / Paper  │ Automated CSV       │
+│ Algorithmic Auditability       │ Black-Box/None  │ 100% Deterministic  │
 └────────────────────────────────┴─────────────────┴─────────────────────┘
 ```
-
-### 1. Life Safety & Mortality Prevention
-By identifying hazard-based Red Zones 24 to 72 hours in advance of catastrophic breach or landfall, PUNARVAAS enables **orderly, daylight evacuations**, completely eliminating last-minute panic operations in raging floodwaters or cyclonic gale-force winds.
-
-### 2. Elimination of Shelter Overcrowding
-Through automated capacity tracking and multi-shelter redistribution, PUNARVAAS prevents the common humanitarian failure where primary shelters become severely overwhelmed while adjacent secondary shelters remain underutilized.
-
-### 3. Objective, Data-Driven Resettlement Planning
-Beyond immediate emergency evacuation, PUNARVAAS maintains a historical log of habitations that repeatedly cross into the Red Zone across multiple seasons. This provides State Governments with **irrefutable scientific justification** to allocate permanent housing reconstruction subsidies (e.g., under PMAY-Gramin and SDRF/NDRF mitigation windows) in geologically stable areas.
-
-### 4. Optimized Resource Allocation
-District Magistrates can accurately forecast the exact number of state transport buses, ambulances, medical personnel, and food rations required for each sector, eliminating wasteful logistical misallocations.
 
 ---
 
 ## 14. Transparent Disclosure of Limitations & Boundary Conditions
 
-To maintain the highest standards of scientific and professional integrity, the following limitations of the current prototype are openly acknowledged:
+In accordance with scientific and professional integrity standards:
 
-1. **Point-Coordinate Spatial Abstraction:**
-   In the current prototype, habitations are represented as geospatial centroid coordinates with calibrated population catchment radiuses. In full production, this will be expanded to full vector cadastral polygon boundaries representing revenue village survey plots.
-2. **Telemetry Ingestion vs. Scenario Simulation:**
-   The current demonstration system utilizes an interactive scenario simulation engine calibrated to real historical events (Cyclone Fani, Baitarani Floods) to ensure predictable, reproducible evaluation during review. In live production, this simulation layer is replaced by automated REST webhooks consuming real-time IMD/CWC telemetry feeds.
-3. **Road Disconnection Modeling:**
-   Road connectivity is currently scored using classified attributes (`good_paved`, `kutcha_trail`, `elevated_highway`). Production integration with OpenStreetMap / PMGSY road networks will enable dynamic Dijkstra / A* shortest-path flood-routing algorithms.
+1. **Centroid Coordinate Abstraction:** Habitations are currently modeled as geospatial centroid coordinates with demographic attributes. Production deployment will map full cadastral revenue village boundary polygons.
+2. **Synthetic Telemetry Benchmark Mode:** As documented under ADR 3, the prototype utilizes pre-cached realistic hydrometeorological datasets grounded in real benchmarks to guarantee repeatable, offline judge evaluations.
+3. **Road Connectivity Attribute Model:** Road accessibility is evaluated via verified operational attribute scores ($A_s \in [0.0, 10.0]$). Full production will integrate OpenStreetMap and PMGSY road network vectors with dynamic graph routing algorithms (Dijkstra / A*).
+4. **Cohort-Level Operational Triage:** Ground execution tracks evacuee cohorts rather than individual biometric identities to maintain citizen privacy during emergency staging.
 
 ---
 
 ## 15. Compliance with National Mandates & Disaster Act 2005
 
-PUNARVAAS directly supports key national policies and statutory frameworks:
-* **The Disaster Management Act, 2005 (Act No. 53 of 2005):** Complies with statutory mandates for continuous hazard monitoring, risk identification, and proactive evacuation planning.
-* **National Policy on Disaster Management (NPDM 2009):** Promotes the institutional transition from reactive relief to holistic, proactive prevention, mitigation, and preparedness.
-* **National Disaster Management Guidelines on Cyclone & Flood Shelters:** Directly implements NDMA standards requiring minimum carpet area per evacuee ($3.5\text{ m}^2/\text{person}$), dedicated medical triage zones, and safe separation from active inundation zones.
-* **Prime Minister’s 10-Point Agenda on Disaster Risk Reduction (DRR):** Specifically fulfills **Point 1** (All development projects must be disaster resilient) and **Point 3** (Encourage greater involvement of women and vulnerable leadership in disaster management through explicit tracking of children, elderly, and kutcha-dwelling families).
+PUNARVAAS aligns directly with statutory disaster management frameworks:
+* **The Disaster Management Act, 2005 (Act No. 53 of 2005):** Directly addresses Section 30 mandates for District Disaster Management Authorities to identify vulnerable areas, assess disaster risks, and maintain emergency shelters.
+* **National Policy on Disaster Management (NPDM 2009):** Advances the institutional paradigm shift from reactive relief to proactive, technology-driven mitigation and preparedness.
+* **National Disaster Management Guidelines on Cyclone & Flood Shelters:** Implements shelter capacity safeguards, infrastructure readiness tracking (water, power, sanitation, medical), and secondary disaster safety evaluations.
+* **Prime Minister’s 10-Point Agenda on Disaster Risk Reduction:** Fulfills **Point 1** (Disaster risk management embedded in development planning) and **Point 3** (Greater involvement of women and vulnerable leadership through explicit demographic tracking of children, elderly, and kutcha-dwelling households).
 
 ---
 
-## 16. Conclusion & Executive Evaluation Matrix
+## 16. Conclusion & System Verification Matrix
 
-PUNARVAAS transforms the ambitious mandate of **Problem Statement 26191** into a working, highly polished, scientifically rigorous software platform. By unifying GSI susceptibility maps, CWC hydrological baselines, and IMD meteorological thresholds into a cohesive 4-layer dynamic risk engine, and coupling it with capacity-aware relocation planning and human-in-the-loop governance, PUNARVAAS provides an actionable technological blueprint for saving lives and building disaster-resilient habitations across India.
+PUNARVAAS fulfills the ambitious mandate of **Smart India Hackathon Problem Statement 26191** through a working, fully verified software implementation. By combining official GSI landslide thresholds, CWC hydrologic baselines, and IMD meteorological classifications into an auditable 4-layer dynamic risk engine, and integrating it with an explainable machine learning classifier, a greedy capacity-constrained relocation algorithm, and a server-backed evacuation state machine, PUNARVAAS provides an actionable, defensible blueprint for saving lives and building disaster-resilient habitations across India.
 
-```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                            FINAL EXECUTIVE SCORECARD                                   │
-├──────────────────────────┬───────────┬─────────────────────────────────────────────────┤
-│ Evaluation Criterion     │ Score     │ Demonstration Evidence                          │
-├──────────────────────────┼───────────┼─────────────────────────────────────────────────┤
-│ Problem Understanding    │ 10 / 10   │ Flawless alignment with PS 26191 mandates       │
-│ Mathematical & Sci. Rigor│ 10 / 10   │ 4-layer formula grounded in GSI, CWC, IMD norms │
-│ System Architecture      │ 10 / 10   │ Decoupled FastAPI + React + SQLite microservices│
-│ User Experience & GIS    │ 10 / 10   │ Interactive Leaflet maps, 60 FPS, dark mode     │
-│ Innovation & XAI         │ 9.5 / 10  │ Dual-engine consensus + feature weight rationales│
-│ Operational Field Utility│ 9.5 / 10  │ Triage state machine, CSV manifests, sign-offs  │
-│ Feasibility & Viability  │ 9.5 / 10  │ 100% open-source, air-gapped EOC ready          │
-│ Completeness & Polish    │ 10 / 10   │ Working prototype, 150+ habitations, 15 shelters│
-├──────────────────────────┼───────────┼─────────────────────────────────────────────────┤
-│ OVERALL RATING           │ 98 / 100  │ EXCEPTIONALLY STRONG PRODUCT CANDIDATE          │
-└──────────────────────────┴───────────┴─────────────────────────────────────────────────┘
-```
+### System Verification & Code Parity Matrix
+
+| Subsystem | Underlying Code Implementation | Verified Ground Truth | Operational Status |
+| :--- | :--- | :--- | :--- |
+| **Composite Risk Engine** | `backend/risk_engine.py` | 4-layer formula ($35\%$ Susceptibility, $30\%$ Trigger, $25\%$ Vulnerability, $10\%$ History) | Fully Tested & Deterministic |
+| **Landslide Trigger** | `backend/risk_engine.py` | GSI $150\text{ mm}$ 24h threshold: $\min(1.0, R_{24\text{h}} / 150.0)$ | Verified against GSI standards |
+| **Flood Trigger** | `backend/risk_engine.py` | CWC gauge logic (Danger Level to HFL clamping) | Verified against Baitarani datum |
+| **Cyclone Trigger** | `backend/risk_engine.py` | 6-tier IMD discrete mapping ($0.20$ to $1.00$) | Verified against IMD categories |
+| **Explainable ML (XAI)** | `backend/ml_model.py` | 6-dimensional feature vector, Logistic Regression, discrepancy threshold $> 0.15$ | Offline Model Trained (`model.pkl`) |
+| **Relocation Engine** | `backend/relocation_engine.py`| Greedy capacity-constrained allocation, multi-criteria suitability, soft secondary risk | Tested with zero overflow |
+| **Evacuation Execution** | `backend/database.py`, `main.py` | 4-state triage machine (`UNCONTACTED` $\rightarrow$ `CHECKED_IN`), blocker taxonomy | Server-backed with audit ledger |
+| **Demonstration Integrity** | `backend/synthetic_data.py` | 15 shelters (12 Odisha pilot + 3 illustrative), 150 pilot habitations, pre-cached demo | Permanent UI disclosure badge |
 
 ---
 *PUNARVAAS (पुनर्वास) — Built for the Ministry of Home Affairs (MHA), National Disaster Response Force (NDRF), and State Disaster Management Authorities.*

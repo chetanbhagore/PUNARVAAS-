@@ -122,6 +122,7 @@ def test_relocation_mechanism():
     print(f"PASS: Relocation Engine verified. {summary['total_evacuees_allocated']:,} evacuees allocated across {summary['sites_utilized_count']} sites.")
 
 from database import (
+    get_connection,
     ensure_evacuation_cases,
     get_evacuation_cases,
     transition_evacuation_case,
@@ -132,6 +133,14 @@ from database import (
 
 def test_evacuation_board_and_blocker_lifecycle():
     op_id = "evacuation::test_unit_run"
+    # Ensure clean test state for idempotent re-runs
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM evacuation_cases WHERE operation_id = ?", (op_id,))
+    c.execute("DELETE FROM operation_events WHERE operation_id = ?", (op_id,))
+    conn.commit()
+    conn.close()
+
     habs = get_all_habitations()
     safe_sites = get_safe_sites()
     plan = generate_relocation_plan(habs, safe_sites)
