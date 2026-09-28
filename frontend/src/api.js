@@ -2,8 +2,16 @@
  * Centralized API client for PUNARVAAS backend
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE || 
-  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const rawEnvBase = import.meta.env.VITE_API_BASE;
+const isPlaceholder = !rawEnvBase || 
+  rawEnvBase.includes('your-backend') || 
+  rawEnvBase.includes('YOUR-BACKEND');
+
+// When deployed on Vercel or running on localhost, use the verified relative /api proxy rewrite.
+// If explicitly provided a valid custom backend URL, use that; otherwise fallback to Render directly.
+const API_BASE = (!isPlaceholder && rawEnvBase)
+  ? rawEnvBase
+  : (typeof window !== 'undefined' && (window.location.hostname.endsWith('vercel.app') || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? '/api' 
     : 'https://punarvaas.onrender.com/api');
 

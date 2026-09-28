@@ -78,18 +78,24 @@ export default function App() {
   const [selectedAlert, setSelectedAlert] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [isJudgeDemoLoading, setIsJudgeDemoLoading] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   // Load baseline dashboard state
   const loadDashboardData = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
     try {
       const [statsData, habsData, alertsData, scenariosData] = await Promise.all([
         fetchStats(),
         fetchHabitations(),
         fetchAlerts(),
-        fetchScenarios()
+        fetchScenarios().catch(err => {
+          console.warn('Scenarios fetch non-critical warning:', err);
+          return { scenarios: [], active_scenario: 'baseline' };
+        })
       ]);
       setStats(statsData);
       setHabitations(habsData);
@@ -98,6 +104,7 @@ export default function App() {
       setActiveScenario(scenariosData.active_scenario || 'baseline');
     } catch (err) {
       console.error('Error fetching dashboard state:', err);
+      setLoadError(err.message || 'Failed to connect to backend server');
     } finally {
       setIsLoading(false);
     }
@@ -189,6 +196,22 @@ export default function App() {
         onResetBaseline={handleResetBaseline}
         isResetting={isResetting}
       />
+
+      {/* Backend Connection Notice Banner */}
+      {loadError && (
+        <div className="bg-[#C13F3F]/10 border-b border-[#C13F3F]/30 px-6 py-2.5 flex items-center justify-between text-xs text-[#C13F3F]">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">Backend Connection Notice:</span>
+            <span>{loadError}. If backend was sleeping (Render free tier), it may take ~30s to wake up.</span>
+          </div>
+          <button
+            onClick={loadDashboardData}
+            className="px-3 py-1 bg-[#C13F3F] text-white rounded font-medium hover:bg-[#A83232] cursor-pointer"
+          >
+            Retry Connection
+          </button>
+        </div>
+      )}
 
       {/* Main Container: Sidebar + Content Area */}
       <div className="flex-1 flex overflow-hidden">
