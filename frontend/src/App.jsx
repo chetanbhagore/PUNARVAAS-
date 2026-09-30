@@ -87,8 +87,8 @@ export default function App() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Video guide and Assam modal visibility
-  const [isVideoGuideOpen, setIsVideoGuideOpen] = useState(true);
+  // Video guide and Assam modal visibility (closed by default for clean dashboard)
+  const [isVideoGuideOpen, setIsVideoGuideOpen] = useState(false);
   const [isAssamModalOpen, setIsAssamModalOpen] = useState(false);
 
   // Load baseline dashboard state
@@ -215,10 +215,7 @@ export default function App() {
         stats={stats}
         onTriggerJudgeDemo={handleTriggerJudgeDemo}
         isJudgeDemoLoading={isJudgeDemoLoading}
-        onTriggerAssamDemo={handleTriggerAssamDemo}
-        isAssamDemoLoading={isAssamDemoLoading}
-        onOpenAssamModal={() => setIsAssamModalOpen(true)}
-        onOpenVideoGuide={() => setIsVideoGuideOpen(true)}
+        onSimulateScenario={handleSimulateScenario}
       />
 
       {/* Simulation Active Notice Banner */}

@@ -61,60 +61,15 @@ export default function OverviewTab({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <button
-            onClick={onOpenVideoGuide}
-            className="flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold bg-[#16232E] hover:bg-[#253847] text-white transition-colors cursor-pointer shadow-xs border border-[#16232E]"
-          >
-            <span>🎥 Video Demo Guide</span>
-          </button>
-
-          <button
-            onClick={onTriggerJudgeDemo}
-            disabled={isJudgeDemoLoading}
-            className="flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold bg-[#3D5A73] hover:bg-[#4E6F8C] active:bg-[#2D4559] text-white transition-colors cursor-pointer shadow-xs border border-[#3D5A73]"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            <span>{isJudgeDemoLoading ? 'Running...' : 'Judge Demo (Odisha)'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Assam Flood Crisis & Blue Zone Haven Spotlight Banner */}
-      <div className="bg-gradient-to-r from-[#1E3A8A] via-[#1D4ED8] to-[#2563EB] text-white p-5 rounded-lg border border-[#3B82F6] shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="space-y-1.5 max-w-3xl">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/30">
-              Assam 2026 Live Deployment Data
-            </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#E0B33C] text-black">
-              🔵 BLUE ZONE SANCTUARY
-            </span>
-          </div>
-          <h2 className="text-base font-bold text-white tracking-tight">
-            How PUNARVAAS Solves the Assam Flood Crisis (Majuli · Dhemaji · Cachar · Barpeta)
-          </h2>
-          <p className="text-xs text-blue-100 leading-relaxed">
-            Eliminates dangerous highway-embankment squatting and charland isolation. Automated CWC gauge telemetry at Nimati Ghat & Annapurna Ghat triggers pre-inundation amphibious SDRF boat routing to certified <strong>Blue Zone Safe Havens (+5.2m above HFL)</strong> with off-grid solar RO water and high-ground cattle refuge.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
-          <button
-            onClick={onTriggerAssamDemo}
-            disabled={isAssamDemoLoading}
-            className="px-3.5 py-2 rounded bg-[#C13F3F] hover:bg-[#9B2727] text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            <span>🌊 {isAssamDemoLoading ? 'Simulating Flood...' : 'Simulate Assam Brahmaputra Flood'}</span>
-          </button>
-          <button
-            onClick={onOpenAssamModal}
-            className="px-3.5 py-2 rounded bg-white hover:bg-blue-50 text-[#1E3A8A] text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
-          >
-            <span>📘 How We Solve It</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        <button
+          onClick={onTriggerJudgeDemo}
+          disabled={isJudgeDemoLoading}
+          className="flex items-center gap-1.5 px-4 py-2 rounded text-xs font-semibold bg-[#3D5A73] hover:bg-[#4E6F8C] active:bg-[#2D4559] text-white transition-colors cursor-pointer shadow-xs shrink-0 disabled:opacity-50"
+          title="Triggers live multi-hazard escalation scenario for evaluation"
+        >
+          <Play className="w-3.5 h-3.5 fill-current" />
+          <span>{isJudgeDemoLoading ? 'Running Simulation...' : 'Launch Judge Demo Mode'}</span>
+        </button>
       </div>
 
       {/* Summary Stat Cards */}

@@ -59,6 +59,111 @@ const BASEMAP_PROVIDERS = {
   }
 };
 
+const CWC_RIVER_GAUGES = [
+  {
+    id: 'CWC-NIMATI-GHAT',
+    name: 'Nimati Ghat River Gauge (Brahmaputra)',
+    river: 'Brahmaputra River',
+    reach: 'Majuli Island Reach, Assam',
+    district: 'Majuli',
+    lat: 26.862,
+    lon: 94.225,
+    water_level_m: 86.42,
+    warning_level_m: 85.04,
+    danger_level_m: 85.54,
+    hfl_m: 87.30,
+    trend: 'Rising (+3.2 cm/hr)',
+    status: 'DANGER_EXCEEDED',
+    status_text: '+0.88m Above Danger Level',
+    discharge_rate: '1,840,000 cusecs'
+  },
+  {
+    id: 'CWC-ANNAPURNA-GHAT',
+    name: 'Annapurna Ghat River Gauge (Barak)',
+    river: 'Barak River',
+    reach: 'Silchar Urban & Rural Reach, Cachar, Assam',
+    district: 'Cachar (Silchar)',
+    lat: 24.831,
+    lon: 92.802,
+    water_level_m: 20.95,
+    warning_level_m: 18.83,
+    danger_level_m: 19.83,
+    hfl_m: 21.85,
+    trend: 'Rising (+4.5 cm/hr)',
+    status: 'DANGER_EXCEEDED',
+    status_text: '+1.12m Above Danger Level (Embankment Overtopping)',
+    discharge_rate: '420,000 cusecs'
+  },
+  {
+    id: 'CWC-JIADHAL-BASIN',
+    name: 'Jiadhal Flood Gauge (Jiadhal Flash River)',
+    river: 'Jiadhal River (Subansiri Sub-basin)',
+    reach: 'Dhemaji Alluvial Floodway, Assam',
+    district: 'Dhemaji',
+    lat: 27.495,
+    lon: 94.560,
+    water_level_m: 104.90,
+    warning_level_m: 103.80,
+    danger_level_m: 104.50,
+    hfl_m: 105.80,
+    trend: 'Surging (+6.1 cm/hr)',
+    status: 'DANGER_EXCEEDED',
+    status_text: '+0.40m Above Danger Level (Debris Torrent)',
+    discharge_rate: '165,000 cusecs'
+  },
+  {
+    id: 'CWC-BEKI-MANAS',
+    name: 'Beki-Manas Confluence Gauge',
+    river: 'Beki / Manas River',
+    reach: 'Barpeta Charland Reach, Assam',
+    district: 'Barpeta',
+    lat: 26.210,
+    lon: 90.920,
+    water_level_m: 43.15,
+    warning_level_m: 42.10,
+    danger_level_m: 42.70,
+    hfl_m: 44.10,
+    trend: 'Elevated (+1.8 cm/hr)',
+    status: 'DANGER_EXCEEDED',
+    status_text: '+0.45m Above Danger Level (Char Submersion)',
+    discharge_rate: '380,000 cusecs'
+  },
+  {
+    id: 'CWC-ANANDAPUR',
+    name: 'Anandapur River Gauge (Baitarani)',
+    river: 'Baitarani River',
+    reach: 'Anandapur / Kendrapara Reach, Odisha',
+    district: 'Kendrapara',
+    lat: 21.218,
+    lon: 86.115,
+    water_level_m: 37.10,
+    warning_level_m: 37.45,
+    danger_level_m: 38.36,
+    hfl_m: 40.12,
+    trend: 'Steady (-0.8 cm/hr)',
+    status: 'NORMAL',
+    status_text: '-1.26m Below Danger Level',
+    discharge_rate: '92,000 cusecs'
+  },
+  {
+    id: 'CWC-JENAPUR',
+    name: 'Jenapur River Gauge (Brahmani)',
+    river: 'Brahmani River',
+    reach: 'Jenapur / Kendrapara Estuary, Odisha',
+    district: 'Kendrapara',
+    lat: 20.865,
+    lon: 86.035,
+    water_level_m: 66.20,
+    warning_level_m: 66.00,
+    danger_level_m: 67.00,
+    hfl_m: 69.15,
+    trend: 'Moderate (+1.1 cm/hr)',
+    status: 'ELEVATED',
+    status_text: '-0.80m Below Danger Level',
+    discharge_rate: '145,000 cusecs'
+  }
+];
+
 export default function LiveMapTab({
   habitations,
   selectedHabitation,
@@ -75,6 +180,7 @@ export default function LiveMapTab({
   const [showCorridors, setShowCorridors] = useState(true);
   const [showShelters, setShowShelters] = useState(true);
   const [showHabitations, setShowHabitations] = useState(true);
+  const [showRiverGauges, setShowRiverGauges] = useState(true);
   const [corridorTier, setCorridorTier] = useState('ALL');
   const [relocationPlan, setRelocationPlan] = useState(null);
   const [rawSafeSites, setRawSafeSites] = useState([]);
@@ -113,7 +219,10 @@ export default function LiveMapTab({
   // Filter habitations based on selections
   const filteredHabitations = useMemo(() => {
     return (habitations || []).filter((h) => {
-      if (districtFilter !== 'ALL' && h.district !== districtFilter) return false;
+      if (districtFilter !== 'ALL') {
+        const isCacharMatch = (districtFilter === 'Cachar' || districtFilter === 'Cachar (Silchar)') && h.district?.startsWith('Cachar');
+        if (!isCacharMatch && h.district !== districtFilter) return false;
+      }
       if (hazardFilter !== 'ALL' && h.hazard_type !== hazardFilter) return false;
       if (zoneFilter !== 'ALL' && h.zone !== zoneFilter) return false;
       return true;
@@ -163,13 +272,17 @@ export default function LiveMapTab({
     if (!showCorridors || !relocationPlan?.allocations) return [];
     return relocationPlan.allocations.filter((alloc) => {
       if (corridorTier !== 'ALL' && alloc.urgency_tier !== corridorTier) return false;
-      if (
-        districtFilter !== 'ALL' &&
-        alloc.district !== districtFilter &&
-        alloc.shelter_district !== districtFilter &&
-        alloc.site_district !== districtFilter
-      ) {
-        return false;
+      if (districtFilter !== 'ALL') {
+        const isCacharMatch = (districtFilter === 'Cachar' || districtFilter === 'Cachar (Silchar)') &&
+          (alloc.district?.startsWith('Cachar') || alloc.shelter_district?.startsWith('Cachar') || alloc.site_district?.startsWith('Cachar'));
+        if (
+          !isCacharMatch &&
+          alloc.district !== districtFilter &&
+          alloc.shelter_district !== districtFilter &&
+          alloc.site_district !== districtFilter
+        ) {
+          return false;
+        }
       }
       if (highlightedShelterId && (alloc.site_id !== highlightedShelterId && alloc.safe_site_id !== highlightedShelterId)) {
         return false;
@@ -182,10 +295,25 @@ export default function LiveMapTab({
   const filteredSafeSites = useMemo(() => {
     if (!showShelters) return [];
     return safeSitesList.filter((s) => {
-      if (districtFilter !== 'ALL' && s.district !== districtFilter) return false;
+      if (districtFilter !== 'ALL') {
+        const isCacharMatch = (districtFilter === 'Cachar' || districtFilter === 'Cachar (Silchar)') && s.district?.startsWith('Cachar');
+        if (!isCacharMatch && s.district !== districtFilter) return false;
+      }
       return true;
     });
   }, [showShelters, safeSitesList, districtFilter]);
+
+  // Filtered CWC River Gauges
+  const filteredRiverGauges = useMemo(() => {
+    if (!showRiverGauges) return [];
+    return CWC_RIVER_GAUGES.filter((g) => {
+      if (districtFilter !== 'ALL') {
+        const isCacharMatch = (districtFilter === 'Cachar' || districtFilter === 'Cachar (Silchar)') && g.district?.startsWith('Cachar');
+        if (!isCacharMatch && g.district !== districtFilter) return false;
+      }
+      return true;
+    });
+  }, [showRiverGauges, districtFilter]);
 
   // Find active allocation for the currently selected habitation
   const activeAllocation = useMemo(() => {
@@ -358,6 +486,28 @@ export default function LiveMapTab({
               </span>
             </button>
 
+            {/* CWC River Gauges Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowRiverGauges(!showRiverGauges)}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded font-semibold cursor-pointer transition-colors border ${
+                showRiverGauges
+                  ? 'bg-[#0284C7] text-white border-[#0284C7] shadow-xs'
+                  : 'bg-[#EDF0F2] text-[#5C6B76] border-[#DDE3E8] hover:text-[#16232E]'
+              }`}
+              title="Toggle Automated Central Water Commission (CWC) River Gauges"
+            >
+              <Droplets className="w-3.5 h-3.5 text-cyan-200" />
+              <span>🌊 CWC Gauges</span>
+              <span
+                className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                  showRiverGauges ? 'bg-white/20 text-white' : 'bg-[#DDE3E8] text-[#5C6B76]'
+                }`}
+              >
+                {filteredRiverGauges.length}
+              </span>
+            </button>
+
             {/* Base Map Selector */}
             <select
               value={baseMap}
@@ -394,6 +544,11 @@ export default function LiveMapTab({
           {showShelters && (
             <span>
               Blue Zone Havens: <strong className="text-[#2563EB] font-bold">{filteredSafeSites.length}</strong>
+            </span>
+          )}
+          {showRiverGauges && (
+            <span>
+              CWC Gauges: <strong className="text-[#0284C7] font-bold">{filteredRiverGauges.length}</strong>
             </span>
           )}
         </div>
@@ -440,12 +595,18 @@ export default function LiveMapTab({
               ? 'evac-corridor-immediate'
               : 'evac-corridor-shortterm';
 
+            const isAssam = ['Majuli', 'Dhemaji', 'Cachar', 'Cachar (Silchar)', 'Barpeta'].some(
+              (d) => alloc.district?.includes(d) || alloc.shelter_district?.includes(d) || alloc.site_district?.includes(d)
+            );
             const busCount =
               alloc.transit_logistics?.bus_convoy_fleet ||
               Math.max(1, Math.ceil((alloc.allocated_headcount || alloc.allocated_count || 500) / 50));
             const odrafCount =
               alloc.transit_logistics?.odraf_escort_vehicles ||
               Math.max(1, Math.ceil((alloc.allocated_headcount || alloc.allocated_count || 500) / 150)) + 1;
+            const boatCount =
+              alloc.transit_logistics?.rescue_boats_bimb ||
+              Math.max(2, Math.ceil((alloc.allocated_headcount || alloc.allocated_count || 500) / 40));
 
             return (
               <React.Fragment key={alloc.allocation_id}>
@@ -511,7 +672,7 @@ export default function LiveMapTab({
                           Distance: <strong>{alloc.distance_km || 15} km</strong>
                         </div>
                         <div>
-                          Fleet: <strong>{busCount} Buses + {odrafCount} Escorts</strong>
+                          Fleet: <strong>{busCount} {isAssam ? 'Convoy Units' : 'Buses'} + {odrafCount} {isAssam ? 'SDRF Escorts' : 'ODRAF Escorts'}{isAssam ? ` (${boatCount} Boats)` : ''}</strong>
                         </div>
                       </div>
                       <div className="text-[10px] text-[#80D8FF] pt-0.5">
@@ -579,7 +740,8 @@ export default function LiveMapTab({
                         <div className="flex items-center justify-between">
                           <span className="text-[#5C6B76]">Transport Fleet:</span>
                           <strong className="text-[#16232E]">
-                            {busCount} State Buses + {odrafCount} ODRAF Jeeps
+                            {busCount} {isAssam ? 'State Convoys / River Transports' : 'State Buses'} + {odrafCount} {isAssam ? 'SDRF River Rescue Teams' : 'ODRAF Jeeps'}
+                            {isAssam && ` (${boatCount} Inflatable BIMB Boats)`}
                           </strong>
                         </div>
                         <div className="flex items-center justify-between">
@@ -908,6 +1070,115 @@ export default function LiveMapTab({
                 </React.Fragment>
               );
             })}
+
+          {/* 4. CWC River Gauge Hydrological Telemetry Stations */}
+          {showRiverGauges &&
+            filteredRiverGauges.map((gauge) => {
+              const isDanger = gauge.status === 'DANGER_EXCEEDED';
+              const gaugeColor = isDanger ? '#C13F3F' : gauge.status === 'ELEVATED' ? '#D97A2E' : '#0284C7';
+
+              return (
+                <React.Fragment key={gauge.id}>
+                  {/* Outer Pulsing Water Ring for Critical Gauges */}
+                  {isDanger && (
+                    <CircleMarker
+                      center={[gauge.lat, gauge.lon]}
+                      radius={22}
+                      pathOptions={{
+                        fillColor: '#0284C7',
+                        fillOpacity: 0.25,
+                        color: '#C13F3F',
+                        weight: 2,
+                        dashArray: '3, 3'
+                      }}
+                      interactive={false}
+                    />
+                  )}
+
+                  {/* Primary River Gauge Station Marker */}
+                  <CircleMarker
+                    center={[gauge.lat, gauge.lon]}
+                    radius={11}
+                    pathOptions={{
+                      fillColor: gaugeColor,
+                      fillOpacity: 0.95,
+                      color: '#0284C7',
+                      weight: 3.0
+                    }}
+                  >
+                    <Tooltip direction="top" offset={[0, -10]} opacity={0.98}>
+                      <div className="text-xs p-1.5 space-y-1">
+                        <div className="flex items-center gap-1.5 border-b border-white/20 pb-1">
+                          <span className="bg-[#0284C7] text-white px-1.5 py-0.2 rounded text-[9px] font-bold">
+                            🌊 CWC GAUGE
+                          </span>
+                          <strong className="text-white text-xs">{gauge.name}</strong>
+                        </div>
+                        <p className="text-[11px] text-white/90">
+                          {gauge.river} · {gauge.reach}
+                        </p>
+                        <div className="pt-0.5 text-[11px] flex items-center justify-between gap-2">
+                          <span className="text-white/80">Current Level:</span>
+                          <strong className="text-white font-mono">
+                            {gauge.water_level_m}m (DL: {gauge.danger_level_m}m)
+                          </strong>
+                        </div>
+                        <div className="text-[10px] font-bold" style={{ color: isDanger ? '#FF8A8A' : '#A7FFEB' }}>
+                          {gauge.status_text} · {gauge.trend}
+                        </div>
+                      </div>
+                    </Tooltip>
+
+                    <Popup>
+                      <div className="text-xs space-y-2 p-1 min-w-[280px]">
+                        <div className="flex items-center justify-between border-b border-[#DDE3E8] pb-1.5 bg-[#0284C7]/10 p-2 rounded -mx-1 -mt-1 mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <Droplets className="w-4 h-4 text-[#0284C7]" />
+                            <span className="font-bold text-[#16232E] text-xs">{gauge.name}</span>
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[9px] font-bold text-white ${
+                              isDanger ? 'bg-[#C13F3F]' : 'bg-[#0284C7]'
+                            }`}
+                          >
+                            {isDanger ? 'DANGER LEVEL EXCEEDED' : 'MONITORING'}
+                          </span>
+                        </div>
+
+                        <p className="text-[11px] text-[#5C6B76]">{gauge.river} · {gauge.reach}</p>
+
+                        <div className="bg-[#EDF0F2] p-2 rounded border border-[#DDE3E8] space-y-1 text-[11px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#5C6B76]">Current Water Stage:</span>
+                            <strong className="font-mono text-[#16232E]">{gauge.water_level_m} meters</strong>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#5C6B76]">CWC Danger Level (DL):</span>
+                            <span className="font-mono font-bold text-[#C13F3F]">{gauge.danger_level_m} meters</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#5C6B76]">Warning Level:</span>
+                            <span className="font-mono text-[#D97A2E]">{gauge.warning_level_m} meters</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#5C6B76]">Historical High Flood Level (HFL):</span>
+                            <span className="font-mono text-[#5C6B76]">{gauge.hfl_m} meters</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[#5C6B76]">Telemetry Discharge:</span>
+                            <span className="font-mono font-bold text-[#16232E]">{gauge.discharge_rate}</span>
+                          </div>
+                        </div>
+
+                        <div className="bg-[#0284C7]/10 p-2 rounded border border-[#0284C7]/20 text-[11px] text-[#0284C7] font-semibold">
+                          Hydrological Impact: {gauge.status_text}. Automated pre-evacuation alert active for connected low-lying habitations.
+                        </div>
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+                </React.Fragment>
+              );
+            })}
         </MapContainer>
 
         {/* Floating Evacuation Route Telemetry HUD (When Habitation or Corridor Selected) */}
@@ -951,7 +1222,10 @@ export default function LiveMapTab({
                 <span className="font-semibold text-[#16232E] flex items-center gap-1">
                   <Truck className="w-3.5 h-3.5 text-[#3D5A73]" />
                   {activeAllocation.transit_logistics?.bus_convoy_fleet || 8} Buses +{' '}
-                  {activeAllocation.transit_logistics?.odraf_escort_vehicles || 2} ODRAF Escorts
+                  {activeAllocation.transit_logistics?.odraf_escort_vehicles || 2}{' '}
+                  {['Majuli', 'Dhemaji', 'Cachar', 'Barpeta'].some((d) => activeAllocation.district?.includes(d))
+                    ? 'SDRF River Rescue Escorts'
+                    : 'ODRAF Escorts'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -1006,6 +1280,12 @@ export default function LiveMapTab({
                   <div className="w-1.5 h-1.5 bg-white rounded-full" />
                 </div>
                 <span className="text-[#16232E] font-semibold text-[#1D4ED8]">🔵 Blue Zone: Safe Haven</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-[#0284C7] border border-white flex items-center justify-center shrink-0 shadow-xs ring-1 ring-[#0284C7]">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                </div>
+                <span className="text-[#16232E] font-semibold text-[#0284C7]">🌊 CWC River Gauge</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-1 bg-[#C13F3F] shrink-0 rounded" />

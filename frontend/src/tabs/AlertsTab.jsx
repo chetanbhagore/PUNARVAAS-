@@ -417,7 +417,10 @@ export default function AlertsTab({
     return (alerts || []).filter((a) => {
       if (a.status !== 'ACTIVE') return false;
       if (severityFilter !== 'ALL' && a.severity !== severityFilter) return false;
-      if (districtFilter !== 'ALL' && a.district !== districtFilter) return false;
+      if (districtFilter !== 'ALL') {
+        const isCacharMatch = (districtFilter === 'Cachar' || districtFilter === 'Cachar (Silchar)') && a.district?.startsWith('Cachar');
+        if (!isCacharMatch && a.district !== districtFilter) return false;
+      }
       if (hazardFilter !== 'ALL' && a.hazard_type !== hazardFilter) return false;
       return true;
     });
@@ -547,7 +550,7 @@ export default function AlertsTab({
             <optgroup label="Assam Flood Basins">
               <option value="Majuli">Majuli (River Island)</option>
               <option value="Dhemaji">Dhemaji (Flash Floods)</option>
-              <option value="Cachar">Cachar (Silchar Breach)</option>
+              <option value="Cachar (Silchar)">Cachar / Silchar (Barak Valley)</option>
               <option value="Barpeta">Barpeta (Charlands)</option>
             </optgroup>
             <option value="Uttarkashi (Illustrative Demo)">Uttarkashi (Illustrative)</option>

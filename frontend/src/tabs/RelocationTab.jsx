@@ -118,7 +118,13 @@ export default function RelocationTab({
   // Filtered allocations
   const filteredAllocations = useMemo(() => {
     return allocations.filter((a) => {
-      if (selectedDistrict !== 'ALL' && a.district !== selectedDistrict) return false;
+      if (selectedDistrict !== 'ALL') {
+        const isCacharMatch = (selectedDistrict === 'Cachar' || selectedDistrict === 'Cachar (Silchar)') &&
+          (a.district?.startsWith('Cachar') || a.shelter_district?.startsWith('Cachar') || a.site_district?.startsWith('Cachar'));
+        if (!isCacharMatch && a.district !== selectedDistrict && a.shelter_district !== selectedDistrict && a.site_district !== selectedDistrict) {
+          return false;
+        }
+      }
       if (selectedTier !== 'ALL' && a.urgency_tier !== selectedTier) return false;
       if (selectedShelterFilter !== 'ALL' && a.site_id !== selectedShelterFilter && a.safe_site_id !== selectedShelterFilter) return false;
       if (searchQuery.trim()) {
@@ -533,7 +539,7 @@ export default function RelocationTab({
             <optgroup label="Assam Flood Basins">
               <option value="Majuli">Majuli (River Island)</option>
               <option value="Dhemaji">Dhemaji (Flash Floods)</option>
-              <option value="Cachar">Cachar (Silchar Breach)</option>
+              <option value="Cachar (Silchar)">Cachar / Silchar (Barak Valley)</option>
               <option value="Barpeta">Barpeta (Charlands)</option>
             </optgroup>
           </select>
@@ -933,12 +939,14 @@ export default function RelocationTab({
                                       </strong>
                                     </div>
                                     <div className="bg-[#3D5A73]/60 px-3 py-1.5 rounded text-center border border-[#5C6B76]/40">
-                                      <span className="text-[10px] text-[#EDF0F2]/70 block">ODRAF / Police 4x4</span>
+                                      <span className="text-[10px] text-[#EDF0F2]/70 block">
+                                        {['Majuli', 'Barpeta', 'Cachar', 'Dhemaji'].some(d => a.district?.includes(d)) ? 'SDRF / Police 4x4' : 'ODRAF / Police 4x4'}
+                                      </span>
                                       <strong className="text-xs text-white">
                                         {a.transit_logistics?.odraf_escort_vehicles || Math.max(2, Math.ceil(headcount / 150) + 1)} Escorts
                                       </strong>
                                     </div>
-                                    {Boolean(a.transit_logistics?.rescue_boats_bimb || (a.district && ['Majuli', 'Barpeta', 'Cachar'].includes(a.district))) && (
+                                    {Boolean(a.transit_logistics?.rescue_boats_bimb || ['Majuli', 'Barpeta', 'Cachar', 'Dhemaji'].some(d => a.district?.includes(d))) && (
                                       <div className="bg-[#2563EB]/50 px-3 py-1.5 rounded text-center border border-[#3B82F6]/60">
                                         <span className="text-[10px] text-[#BFDBFE] block">SDRF Rescue Boats</span>
                                         <strong className="text-xs text-white">

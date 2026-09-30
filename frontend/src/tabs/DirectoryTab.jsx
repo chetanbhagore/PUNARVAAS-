@@ -29,7 +29,10 @@ export default function DirectoryTab({
 
   const filteredHabitations = useMemo(() => {
     return (habitations || []).filter((h) => {
-      if (districtFilter !== 'ALL' && h.district !== districtFilter) return false;
+      if (districtFilter !== 'ALL') {
+        const isCacharMatch = (districtFilter === 'Cachar' || districtFilter === 'Cachar (Silchar)') && h.district?.startsWith('Cachar');
+        if (!isCacharMatch && h.district !== districtFilter) return false;
+      }
       if (hazardFilter !== 'ALL' && h.hazard_type !== hazardFilter) return false;
       if (zoneFilter !== 'ALL' && h.zone !== zoneFilter) return false;
       if (searchTerm) {
@@ -127,7 +130,7 @@ export default function DirectoryTab({
             <optgroup label="Assam Flood Basins">
               <option value="Majuli">Majuli (River Island)</option>
               <option value="Dhemaji">Dhemaji (Flash Floods)</option>
-              <option value="Cachar">Cachar (Silchar Breach)</option>
+              <option value="Cachar (Silchar)">Cachar / Silchar (Barak Valley)</option>
               <option value="Barpeta">Barpeta (Charlands)</option>
             </optgroup>
             <option value="Uttarkashi (Illustrative Demo)">Uttarkashi (Illustrative)</option>

@@ -66,7 +66,7 @@ from relocation_engine import generate_relocation_plan, get_habitation_relocatio
 
 def test_relocation_mechanism():
     safe_sites = get_safe_sites()
-    assert 8 <= len(safe_sites) <= 25, f"Expected 8-25 safe sites, got {len(safe_sites)}"
+    assert 8 <= len(safe_sites) <= 40, f"Expected 8-40 safe sites, got {len(safe_sites)}"
 
     # Verify site schemas
     for s in safe_sites:
@@ -237,7 +237,9 @@ def test_assam_flood_scenario():
     assam_allocs = [a for a in plan["allocations"] if a["district"] in ("Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta")]
     assert len(assam_allocs) > 0, "Expected priority allocations for Assam habitations"
     assert all(a.get("is_blue_zone") is True for a in assam_allocs), "All allocations must route to Blue Zone shelters"
-    print(f"PASS: Assam Flood Crisis scenario verified ({len(red_assam)} RED alerts, {len(assam_allocs)} Blue Zone allocations).")
+    assert all(a.get("shelter_district") in ("Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta") for a in assam_allocs), "All Assam habitations must strictly route to Assam shelters!"
+    assert all(a.get("distance_km", 0) <= 60.0 for a in assam_allocs), "All Assam allocations must route to nearest local havens!"
+    print(f"PASS: Assam Flood Crisis scenario verified ({len(red_assam)} RED alerts, {len(assam_allocs)} Blue Zone allocations, 0 cross-state leaks).")
 
 if __name__ == "__main__":
     init_db()

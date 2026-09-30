@@ -86,7 +86,8 @@ def init_db():
         ("has_water", "INTEGER", "1"),
         ("has_power", "INTEGER", "1"),
         ("has_sanitation", "INTEGER", "1"),
-        ("has_medical", "INTEGER", "1")
+        ("has_medical", "INTEGER", "1"),
+        ("state", "TEXT", "'Odisha'")
     ]:
         if col_name not in cols:
             cursor.execute(f"ALTER TABLE safe_sites ADD COLUMN {col_name} {col_type} NOT NULL DEFAULT {default_val}")
@@ -243,15 +244,26 @@ def save_safe_sites(sites: List[Dict[str, Any]]):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM safe_sites")
+    assam_districts = {"Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta"}
+    odisha_districts = {"Puri", "Kendrapara", "Ganjam", "Kandhamal"}
     for s in sites:
         usable_cap = s.get("usable_capacity", s.get("capacity_persons", 0))
+        site_state = s.get("state")
+        if not site_state:
+            if s.get("district") in assam_districts:
+                site_state = "Assam"
+            elif s.get("district") in odisha_districts:
+                site_state = "Odisha"
+            else:
+                site_state = "Himalayan Demo"
+
         cursor.execute("""
         INSERT INTO safe_sites (
             site_id, name, district, usable_capacity, capacity_persons, lat, lon,
             access_score, infrastructure_score, secondary_risk_score,
             distance_from_district_centroid_km, shelter_type,
-            has_water, has_power, has_sanitation, has_medical, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            has_water, has_power, has_sanitation, has_medical, state, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             s["site_id"],
             s["name"],
@@ -269,6 +281,7 @@ def save_safe_sites(sites: List[Dict[str, Any]]):
             1 if s.get("has_power", True) else 0,
             1 if s.get("has_sanitation", True) else 0,
             1 if s.get("has_medical", True) else 0,
+            site_state,
             s.get("notes", "")
         ))
     conn.commit()
@@ -280,6 +293,7 @@ def get_safe_sites() -> List[Dict[str, Any]]:
     cursor.execute("SELECT * FROM safe_sites ORDER BY district, capacity_persons DESC")
     rows = cursor.fetchall()
     conn.close()
+    assam_districts = {"Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta"}
     result = []
     for r in rows:
         d = dict(r)
@@ -287,6 +301,8 @@ def get_safe_sites() -> List[Dict[str, Any]]:
         d["has_power"] = bool(d.get("has_power", 1))
         d["has_sanitation"] = bool(d.get("has_sanitation", 1))
         d["has_medical"] = bool(d.get("has_medical", 1))
+        if not d.get("state"):
+            d["state"] = "Assam" if d.get("district") in assam_districts else "Odisha"
         result.append(d)
     return result
 

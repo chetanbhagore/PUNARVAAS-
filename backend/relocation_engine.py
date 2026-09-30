@@ -4,27 +4,57 @@ Pure functional, deterministic module for multi-criteria site scoring,
 shelter allocation, and human-in-the-loop decision support for Indian SDMA officials.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 import math
+
+def compute_haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Compute great-circle distance between two geographic coordinates in kilometers."""
+    R = 6371.0
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0)**2
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(max(0.0, 1.0 - a)))
+    return round(R * c, 1)
+
+ASSAM_DISTRICTS_SET = {"Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta"}
+ODISHA_DISTRICTS_SET = {"Puri", "Kendrapara", "Ganjam", "Kandhamal"}
+
+def get_district_state(dist: str) -> str:
+    """Resolve state boundary for district to prevent cross-state allocations."""
+    if dist in ASSAM_DISTRICTS_SET or "Cachar" in dist:
+        return "Assam"
+    if dist in ODISHA_DISTRICTS_SET:
+        return "Odisha"
+    return "Himalayan Demo"
 
 def compute_site_score(
     site: Dict[str, Any],
     remaining_capacity: int,
     needed_population: int,
-    is_same_district: bool = True
+    is_same_district: bool = True,
+    distance_km: float = 15.0
 ) -> float:
     """
     Transparent weighted multi-criteria scoring for a candidate safe site.
+    Ensures priority allocation to the NEAREST and SAFEST site with adequate capacity.
     Weights:
-      - 35% Remaining capacity fit: min(1.0, remaining_capacity / needed_population)
-      - 25% Road access connectivity (0-10 scaled to 0-1)
-      - 25% Infrastructure readiness (power, water, sanitation, medical triage 0-10 scaled to 0-1)
-      - 15% Secondary disaster risk safety (1 - secondary_risk_score)
-    Applies an administrative penalty (0.85 multiplier) if inter-district allocation is required.
+      - 35% Geographic proximity: max(0.0, 1.0 - (distance_km / 75.0))
+      - 30% Usable capacity fit: min(1.0, remaining_capacity / needed_population)
+      - 20% Road & amphibious boat access connectivity (0-10 scaled to 0-1)
+      - 15% Infrastructure readiness & secondary disaster threat safety
+    Rejects sites > 100km away (returns 0.0) as physically infeasible for emergency evacuation.
+    Applies intra-district preference bonus (1.15 multiplier).
     """
     if remaining_capacity <= 0 or needed_population <= 0:
         return 0.0
 
+    if distance_km > 100.0 and not is_same_district:
+        return 0.0
+
+    proximity_fit = max(0.0, 1.0 - (distance_km / 75.0))
     capacity_fit = min(1.0, float(remaining_capacity) / float(needed_population))
     access_norm = min(1.0, max(0.0, float(site.get("access_score", 7.0)) / 10.0))
     infra_norm = min(1.0, max(0.0, float(site.get("infrastructure_score", 7.0)) / 10.0))
@@ -32,14 +62,13 @@ def compute_site_score(
     sec_risk_safety = min(1.0, max(0.0, 1.0 - sec_risk_raw))
 
     base_score = (
-        0.35 * capacity_fit +
-        0.25 * access_norm +
-        0.25 * infra_norm +
-        0.15 * sec_risk_safety
+        0.35 * proximity_fit +
+        0.30 * capacity_fit +
+        0.20 * access_norm +
+        0.15 * (infra_norm * 0.6 + sec_risk_safety * 0.4)
     )
 
-    # Administrative preference: intra-district preference avoids inter-district jurisdiction friction
-    district_multiplier = 1.0 if is_same_district else 0.85
+    district_multiplier = 1.15 if is_same_district else 0.85
     return round(base_score * district_multiplier, 3)
 
 def build_allocation_explanation(
@@ -49,7 +78,8 @@ def build_allocation_explanation(
     needed: int,
     score: float,
     remaining: int,
-    is_split: bool = False
+    is_split: bool = False,
+    distance_km: float = 0.0
 ) -> str:
     """
     Generate a deterministic, legally auditable, plain-text explanation for civil defense officials.
@@ -64,12 +94,13 @@ def build_allocation_explanation(
     sec_risk = site.get("secondary_risk_score", 0.08)
 
     split_prefix = f"Partial allocation ({allocated}/{needed} evacuees, shelter capacity capped): " if is_split else f"Full allocation ({allocated} evacuees): "
-    jurisdiction = "Intra-district" if district == site_dist else f"Inter-district fallback ({site_dist})"
+    dist_str = f"{distance_km:.1f} km" if distance_km > 0 else "Local"
+    jurisdiction = f"Intra-district ({dist_str})" if district == site_dist else f"Regional safe fallback ({site_dist}, {dist_str})"
 
     return (
         f"{split_prefix}{village} ({tier}, risk {hab.get('composite_risk_score', 0):.2f}) "
         f"assigned to BLUE ZONE HAVEN: {site_name} [{jurisdiction}]. "
-        f"Suitability Score: {score:.3f} | Road/Boat Access: {access}/10 | Infra Readiness: {infra}/10 | "
+        f"Suitability Score: {score:.3f} | Proximity: {dist_str} | Road/Boat Access: {access}/10 | Infra Readiness: {infra}/10 | "
         f"Secondary Threat Safety: {(1.0 - sec_risk) * 100:.0f}%. "
         f"Residual shelter capacity: {remaining:,} persons."
     )
@@ -124,50 +155,79 @@ def generate_relocation_plan(
         hab_id = hab.get("habitation_id", "")
         village = hab.get("village", "")
         district = hab.get("district", "")
+        hab_state = hab.get("state") or get_district_state(district)
+        hab_lat = hab.get("lat", 0.0)
+        hab_lon = hab.get("lon", 0.0)
         pop_total = hab.get("population", {}).get("total", 0)
         remaining_to_allocate = pop_total
         split_count = 0
 
         while remaining_to_allocate > 0:
-            # Candidate sites with remaining capacity > 0
-            feasible_sites = [
+            # Candidate sites MUST strictly match the habitation state and have remaining capacity > 0
+            state_feasible_sites = [
                 s for s in sites_state.values()
-                if s["remaining_capacity"] > 0
+                if s["remaining_capacity"] > 0 and (
+                    s.get("state") == hab_state or
+                    get_district_state(s["district"]) == hab_state
+                )
             ]
 
-            if not feasible_sites:
-                # System shelter capacity completely saturated
+            if not state_feasible_sites:
+                # Regional safe havens in this state saturated
                 unallocated_habitations.append({
                     "habitation_id": hab_id,
                     "village": village,
                     "district": district,
                     "urgency_tier": hab.get("relocation_urgency_tier"),
                     "unallocated_headcount": remaining_to_allocate,
-                    "reason": "All certified regional safe shelters at 100% capacity saturation."
+                    "reason": f"All certified safe shelters within {hab_state} ({district} sector) at 100% capacity saturation. Requiring emergency local SDRF/NDRF staging camp deployment."
                 })
                 break
 
-            # Separate into intra-district and inter-district candidates
-            same_dist_feasible = [s for s in feasible_sites if s["district"] == district]
-            candidate_pool = same_dist_feasible if same_dist_feasible else feasible_sites
+            # Separate into intra-district and nearby inter-district candidates within same state
+            same_dist_feasible = [s for s in state_feasible_sites if s["district"] == district]
+            candidate_pool = same_dist_feasible if same_dist_feasible else state_feasible_sites
 
-            # Score candidates
+            # Score candidates with geographic distance
             scored_candidates = []
             for s in candidate_pool:
+                site_lat = s.get("lat", 0.0)
+                site_lon = s.get("lon", 0.0)
+                dist_km = compute_haversine_km(hab_lat, hab_lon, site_lat, site_lon) if (hab_lat and site_lat) else 15.0
+
+                # Reject candidate if beyond safe operational radius (> 100km) when inter-district
+                if dist_km > 100.0 and s["district"] != district:
+                    continue
+
                 score = compute_site_score(
                     site=s,
                     remaining_capacity=s["remaining_capacity"],
                     needed_population=remaining_to_allocate,
-                    is_same_district=(s["district"] == district)
+                    is_same_district=(s["district"] == district),
+                    distance_km=dist_km
                 )
-                scored_candidates.append((score, s))
+                if score > 0.0:
+                    scored_candidates.append((score, dist_km, s))
 
-            # Pick highest score, breaking ties by largest remaining capacity
+            if not scored_candidates:
+                unallocated_habitations.append({
+                    "habitation_id": hab_id,
+                    "village": village,
+                    "district": district,
+                    "urgency_tier": hab.get("relocation_urgency_tier"),
+                    "unallocated_headcount": remaining_to_allocate,
+                    "reason": f"All proximate safe shelters in {hab_state} ({district} sector) are full. Immediate mobile amphibious staging camps required."
+                })
+                break
+
+            # Pick candidate with highest score (which prioritizes closest distance with capacity and safety),
+            # breaking ties by shortest distance, then largest remaining capacity
             scored_candidates.sort(
-                key=lambda item: (item[0], item[1]["remaining_capacity"]),
+                key=lambda item: (item[0], -item[1], item[2]["remaining_capacity"]),
                 reverse=True
             )
-            best_score, best_site = scored_candidates[0]
+            best_score, best_dist, best_site = scored_candidates[0]
+            distance_km = best_dist
 
             # Determine allocation headcount
             alloc_headcount = min(remaining_to_allocate, best_site["remaining_capacity"])
@@ -187,15 +247,9 @@ def generate_relocation_plan(
                 needed=pop_total,
                 score=best_score,
                 remaining=best_site["remaining_capacity"],
-                is_split=is_split
+                is_split=is_split,
+                distance_km=distance_km
             )
-
-            # Geographic distance and transit corridors
-            hab_lat = hab.get("lat", 0.0)
-            hab_lon = hab.get("lon", 0.0)
-            site_lat = best_site.get("lat", 0.0)
-            site_lon = best_site.get("lon", 0.0)
-            distance_km = compute_haversine_km(hab_lat, hab_lon, site_lat, site_lon) if (hab_lat and site_lat) else 20.0
 
             # Priority vulnerable demographics breakdown
             vuln_score = hab.get("vulnerability_score", 0.7) if hab.get("vulnerability_score") else 0.7
@@ -277,7 +331,7 @@ def generate_relocation_plan(
                     "primary_evacuation_route": primary_route,
                     "bus_convoy_fleet": buses_50,
                     "odraf_escort_vehicles": odraf_trucks,
-                    "rescue_boats_bimb": max(2, int(math.ceil(alloc_headcount / 40.0))) if district in ("Majuli", "Barpeta", "Cachar (Silchar)") else 0,
+                    "rescue_boats_bimb": max(2, int(math.ceil(alloc_headcount / 40.0))) if district in ("Majuli", "Barpeta", "Cachar (Silchar)", "Dhemaji") else 0,
                     "departure_window": departure_window,
                     "estimated_residence_duration": stay_duration,
                     "repatriation_protocol": "Phased green-tag return authorized only after structural safety clearance by District Collectorate & PWD Engineers"
@@ -308,6 +362,7 @@ def generate_relocation_plan(
             "site_id": s["site_id"],
             "name": s["name"],
             "district": s["district"],
+            "state": s.get("state") or get_district_state(s["district"]),
             "lat": s.get("lat"),
             "lon": s.get("lon"),
             "usable_capacity": usable,
@@ -363,18 +418,6 @@ def generate_relocation_plan(
         "unallocated_habitations": unallocated_habitations
     }
 
-def compute_haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """Compute great-circle distance between two geographic coordinates in kilometers."""
-    R = 6371.0
-    phi1 = math.radians(lat1)
-    phi2 = math.radians(lat2)
-    delta_phi = math.radians(lat2 - lat1)
-    delta_lambda = math.radians(lon2 - lon1)
-
-    a = math.sin(delta_phi / 2.0)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2.0)**2
-    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(max(0.0, 1.0 - a)))
-    return round(R * c, 1)
-
 DISTRICT_PRIMARY_ROUTES = {
     "Puri": "NH-316 to Puri Coastal Arterial Evacuation Route",
     "Kendrapara": "SH-10 High-Plinth Embankment Corridor (Cuttack-Chandbali)",
@@ -400,16 +443,26 @@ def get_habitation_relocation_logistics(
     hab_lat = hab.get("lat", 20.0)
     hab_lon = hab.get("lon", 85.0)
     district = hab.get("district", "Puri")
+    hab_state = hab.get("state") or get_district_state(district)
     pop_total = hab.get("population", {}).get("total", 1000)
     urgency = hab.get("relocation_urgency_tier", "IMMEDIATE")
     is_immediate = urgency == "IMMEDIATE"
 
-    # 1. Evaluate and score all candidate safe sites
+    # 1. Evaluate and score all candidate safe sites in the SAME state/region
     candidate_list = []
     for s in safe_sites:
+        site_state = s.get("state") or get_district_state(s.get("district", ""))
+        if site_state != hab_state:
+            continue
+
         site_lat = s.get("lat", 0.0)
         site_lon = s.get("lon", 0.0)
         dist_km = compute_haversine_km(hab_lat, hab_lon, site_lat, site_lon) if (hab_lat and site_lat) else 25.0
+
+        # Don't recommend shelters > 100km away when inter-district
+        if dist_km > 100.0 and s.get("district") != district:
+            continue
+
         is_same_dist = (s.get("district") == district)
         usable_cap = int(s.get("usable_capacity", s.get("capacity_persons", 2000)))
 
@@ -417,16 +470,18 @@ def get_habitation_relocation_logistics(
             site=s,
             remaining_capacity=usable_cap,
             needed_population=pop_total,
-            is_same_district=is_same_dist
+            is_same_district=is_same_dist,
+            distance_km=dist_km
         )
 
         candidate_list.append({
             "site_id": s.get("site_id"),
             "name": s.get("name"),
             "district": s.get("district"),
+            "state": site_state,
             "lat": s.get("lat"),
             "lon": s.get("lon"),
-            "shelter_type": s.get("shelter_type", "Cyclone Shelter"),
+            "shelter_type": s.get("shelter_type", "High-Plinth Flood Haven (BLUE ZONE)" if hab_state == "Assam" else "Cyclone Shelter"),
             "distance_km": dist_km,
             "usable_capacity": usable_cap,
             "capacity_persons": s.get("capacity_persons", usable_cap),
@@ -438,11 +493,11 @@ def get_habitation_relocation_logistics(
             "notes": s.get("notes", "")
         })
 
-    # Sort candidates: intra-district first, then proximity, then suitability score
+    # Sort candidates: intra-district first, then shortest distance, then suitability score
     candidate_list.sort(
         key=lambda c: (
             1 if c["is_same_district"] else 0,
-            -c["distance_km"] if c["is_same_district"] else -c["distance_km"] * 1.5,
+            -c["distance_km"],
             c["suitability_score"]
         ),
         reverse=True

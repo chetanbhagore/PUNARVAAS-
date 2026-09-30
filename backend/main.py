@@ -191,16 +191,16 @@ def get_carrying_capacity():
     # Aggregate by all monitored districts (Odisha & Assam)
     districts = [
         "Puri", "Kendrapara", "Ganjam", "Kandhamal",
-        "Majuli", "Dhemaji", "Cachar", "Barpeta"
+        "Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta"
     ]
     result = []
 
     for d in districts:
-        d_habs = [h for h in habitations if h["district"] == d]
+        d_habs = [h for h in habitations if h["district"] == d or (d == "Cachar (Silchar)" and "Cachar" in h["district"])]
         at_risk_habs = [h for h in d_habs if h["zone"] in ("RED", "ORANGE")]
         at_risk_pop = sum(h["population"]["total"] for h in at_risk_habs)
 
-        d_sites = [s for s in sites if s["district"] == d]
+        d_sites = [s for s in sites if s["district"] == d or (d == "Cachar (Silchar)" and "Cachar" in s["district"])]
         shelter_cap = sum(s["capacity_persons"] for s in d_sites)
 
         deficit_or_surplus = shelter_cap - at_risk_pop
@@ -208,6 +208,7 @@ def get_carrying_capacity():
 
         result.append({
             "district": d,
+            "state": "Assam" if d in ("Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta") else "Odisha",
             "at_risk_habitations_count": len(at_risk_habs),
             "at_risk_population": at_risk_pop,
             "available_capacity": shelter_cap,
