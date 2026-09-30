@@ -188,8 +188,11 @@ def get_carrying_capacity():
     habitations = get_all_habitations()
     sites = get_safe_sites()
 
-    # Aggregate by district
-    districts = ["Puri", "Kendrapara", "Ganjam", "Kandhamal"]
+    # Aggregate by all monitored districts (Odisha & Assam)
+    districts = [
+        "Puri", "Kendrapara", "Ganjam", "Kandhamal",
+        "Majuli", "Dhemaji", "Cachar", "Barpeta"
+    ]
     result = []
 
     for d in districts:
