@@ -35,11 +35,11 @@ export default function Sidebar({ activeTab, onSelectTab, totalActiveAlerts }) {
           </div>
           <div>
             <h1 className="text-base font-bold tracking-tight text-white leading-tight">PUNARVAAS</h1>
-            <p className="text-xs text-[#5C6B76] font-normal">Odisha SDMA Decision Support</p>
+            <p className="text-xs text-[#5C6B76] font-normal">OSDMA & ASDMA Decision Support</p>
           </div>
         </div>
         <div className="mt-3 text-[11px] text-[#EDF0F2]/70 bg-[#3D5A73]/30 px-2.5 py-1 rounded border border-[#3D5A73]/40 leading-relaxed">
-          Prototype v1.0 · Smart India Hackathon
+          Prototype v2.0 · Odisha Coastal & Assam Basins
         </div>
       </div>
 
@@ -74,10 +74,11 @@ export default function Sidebar({ activeTab, onSelectTab, totalActiveAlerts }) {
       </nav>
 
       {/* Footer System Info */}
-      <div className="p-4 border-t border-[#3D5A73]/40 text-xs text-[#5C6B76]">
-        <p className="font-medium text-[#EDF0F2]/80">Pilot Districts</p>
-        <p className="mt-0.5">Puri, Kendrapara, Ganjam, Kandhamal</p>
-        <p className="mt-2 text-[10px] text-[#5C6B76]">Human review mandatory on all outputs</p>
+      <div className="p-4 border-t border-[#3D5A73]/40 text-xs text-[#5C6B76] space-y-1">
+        <p className="font-semibold text-[#EDF0F2]/80">Monitored Basins (8 Districts)</p>
+        <p className="text-[11px] text-[#EDF0F2]/70 leading-snug">Odisha: Puri, Kendrapara, Ganjam, Kandhamal</p>
+        <p className="text-[11px] text-[#EDF0F2]/70 leading-snug">Assam: Majuli, Dhemaji, Cachar, Barpeta</p>
+        <p className="pt-1 text-[10px] text-[#5C6B76]">Human review mandatory on all outputs</p>
       </div>
     </aside>
   );

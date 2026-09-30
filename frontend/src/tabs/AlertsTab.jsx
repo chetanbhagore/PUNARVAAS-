@@ -191,9 +191,11 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
         {activeShelter && (
           <div className="bg-[#EDF0F2]/40 rounded p-3 border border-[#DDE3E8] text-xs space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-[#DDE3E8] pb-1.5">
-              <div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#2563EB] shrink-0" />
+                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#2563EB]/15 text-[#1D4ED8]">BLUE ZONE HAVEN</span>
                 <span className="font-bold text-[#16232E]">{activeShelter.name}</span>
-                <span className="text-[#5C6B76] ml-2">({activeShelter.district} · {activeShelter.site_id})</span>
+                <span className="text-[#5C6B76] ml-1">({activeShelter.district} · {activeShelter.site_id})</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#3F8F5F]/15 text-[#3F8F5F]">
@@ -329,6 +331,12 @@ function HabitationLogisticsCard({ habId, alert, habitationsMap, onSelectHabitat
                 <span className="text-[10px] text-[#EDF0F2]/70 block">Escort 4x4</span>
                 <strong className="text-xs text-white">{logistics?.evacuation_timeline?.odraf_escort_vehicles || 2} Trucks</strong>
               </div>
+              {Boolean(logistics?.evacuation_timeline?.rescue_boats_bimb || (alert.district && ['Majuli', 'Barpeta', 'Cachar'].includes(alert.district))) && (
+                <div className="bg-[#2563EB]/50 px-2.5 py-1.5 rounded text-center border border-[#3B82F6]/60">
+                  <span className="text-[10px] text-[#BFDBFE] block">SDRF Boats</span>
+                  <strong className="text-xs text-white">{logistics?.evacuation_timeline?.rescue_boats_bimb || 2} BIMB</strong>
+                </div>
+              )}
             </div>
           </div>
 
@@ -485,6 +493,7 @@ export default function AlertsTab({
               className="bg-[#EDF0F2] text-[#16232E] border border-[#DDE3E8] rounded px-3 py-1.5 text-xs font-semibold cursor-pointer focus:outline-none focus:border-[#3D5A73]"
             >
               <option value="baseline">Baseline Seasonal State</option>
+              <option value="assam_brahmaputra_surge">🌊 Assam Brahmaputra Wave-2 Surge (Nimati/Annapurna Ghat)</option>
               <option value="flood_dikhow_surge">Baitarani Flood Surge (Orange → Red)</option>
               <option value="cyclone_landfall_escalation">Cyclone Landfall Escalation (Puri Coast)</option>
               <option value="landslide_monsoon_saturation">Kandhamal Hill Saturation (195mm Saturation)</option>
@@ -528,11 +537,19 @@ export default function AlertsTab({
             onChange={(e) => setDistrictFilter(e.target.value)}
             className="bg-[#EDF0F2] text-[#16232E] border border-[#DDE3E8] rounded px-2.5 py-1 font-medium cursor-pointer"
           >
-            <option value="ALL">All Districts</option>
-            <option value="Puri">Puri</option>
-            <option value="Kendrapara">Kendrapara</option>
-            <option value="Ganjam">Ganjam</option>
-            <option value="Kandhamal">Kandhamal</option>
+            <option value="ALL">All Districts (Odisha & Assam)</option>
+            <optgroup label="Odisha Coastal Basin">
+              <option value="Puri">Puri</option>
+              <option value="Kendrapara">Kendrapara</option>
+              <option value="Ganjam">Ganjam</option>
+              <option value="Kandhamal">Kandhamal</option>
+            </optgroup>
+            <optgroup label="Assam Flood Basins">
+              <option value="Majuli">Majuli (River Island)</option>
+              <option value="Dhemaji">Dhemaji (Flash Floods)</option>
+              <option value="Cachar">Cachar (Silchar Breach)</option>
+              <option value="Barpeta">Barpeta (Charlands)</option>
+            </optgroup>
             <option value="Uttarkashi (Illustrative Demo)">Uttarkashi (Illustrative)</option>
           </select>
 

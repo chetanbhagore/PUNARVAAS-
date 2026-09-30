@@ -12,6 +12,8 @@ import RelocationTab from './tabs/RelocationTab';
 import AnalyticsTab from './tabs/AnalyticsTab';
 import MethodologyTab from './tabs/MethodologyTab';
 import EvacuationExecutionTab from './tabs/EvacuationExecutionTab';
+import VideoDemoGuide from './components/VideoDemoGuide';
+import AssamCrisisSolutionModal from './components/AssamCrisisSolutionModal';
 
 import {
   fetchStats,
@@ -19,7 +21,8 @@ import {
   fetchAlerts,
   fetchScenarios,
   triggerSimulation,
-  triggerJudgeDemo
+  triggerJudgeDemo,
+  triggerAssamFloodDemo
 } from './api';
 
 class TabErrorBoundary extends React.Component {
@@ -80,8 +83,13 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [isJudgeDemoLoading, setIsJudgeDemoLoading] = useState(false);
+  const [isAssamDemoLoading, setIsAssamDemoLoading] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+
+  // Video guide and Assam modal visibility
+  const [isVideoGuideOpen, setIsVideoGuideOpen] = useState(true);
+  const [isAssamModalOpen, setIsAssamModalOpen] = useState(false);
 
   // Load baseline dashboard state
   const loadDashboardData = useCallback(async () => {
@@ -114,7 +122,7 @@ export default function App() {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  // Section 13: Judge Demo Mode Handler
+  // Section 13: Judge Demo Mode Handler (Odisha)
   const handleTriggerJudgeDemo = async () => {
     setIsJudgeDemoLoading(true);
     try {
@@ -130,6 +138,25 @@ export default function App() {
       console.error('Judge Demo Mode failed:', err);
     } finally {
       setIsJudgeDemoLoading(false);
+    }
+  };
+
+  // Assam Brahmaputra Flood Crisis Demo Handler
+  const handleTriggerAssamDemo = async () => {
+    setIsAssamDemoLoading(true);
+    try {
+      const res = await triggerAssamFloodDemo();
+      await loadDashboardData();
+
+      // Automatically navigate to Alerts tab and expand the lead Assam alert
+      setActiveTab('alerts');
+      if (res.lead_alert) {
+        setSelectedAlert(res.lead_alert);
+      }
+    } catch (err) {
+      console.error('Assam Flood Demo failed:', err);
+    } finally {
+      setIsAssamDemoLoading(false);
     }
   };
 
@@ -188,6 +215,10 @@ export default function App() {
         stats={stats}
         onTriggerJudgeDemo={handleTriggerJudgeDemo}
         isJudgeDemoLoading={isJudgeDemoLoading}
+        onTriggerAssamDemo={handleTriggerAssamDemo}
+        isAssamDemoLoading={isAssamDemoLoading}
+        onOpenAssamModal={() => setIsAssamModalOpen(true)}
+        onOpenVideoGuide={() => setIsVideoGuideOpen(true)}
       />
 
       {/* Simulation Active Notice Banner */}
@@ -239,6 +270,10 @@ export default function App() {
                 }}
                 onTriggerJudgeDemo={handleTriggerJudgeDemo}
                 isJudgeDemoLoading={isJudgeDemoLoading}
+                onTriggerAssamDemo={handleTriggerAssamDemo}
+                isAssamDemoLoading={isAssamDemoLoading}
+                onOpenAssamModal={() => setIsAssamModalOpen(true)}
+                onOpenVideoGuide={() => setIsVideoGuideOpen(true)}
               />
             )}
 
@@ -309,6 +344,36 @@ export default function App() {
           </TabErrorBoundary>
         </main>
       </div>
+
+      {/* Prototype Video Demo EasyFlow Assistant */}
+      {isVideoGuideOpen && (
+        <VideoDemoGuide
+          onNavigateTab={setActiveTab}
+          onTriggerAssamDemo={handleTriggerAssamDemo}
+          onSelectHabitation={setSelectedHabitation}
+          onSelectAlert={setSelectedAlert}
+          onResetBaseline={handleResetBaseline}
+          isAssamLoading={isAssamDemoLoading}
+          onClose={() => setIsVideoGuideOpen(false)}
+          habitations={habitations}
+          alerts={alerts}
+        />
+      )}
+
+      {/* Comprehensive Assam Flood Crisis & Solution Explainer Modal */}
+      <AssamCrisisSolutionModal
+        isOpen={isAssamModalOpen}
+        onClose={() => setIsAssamModalOpen(false)}
+        onTriggerAssamDemo={async () => {
+          setIsAssamModalOpen(false);
+          await handleTriggerAssamDemo();
+        }}
+        isAssamLoading={isAssamDemoLoading}
+        onNavigateTab={(tab) => {
+          setIsAssamModalOpen(false);
+          setActiveTab(tab);
+        }}
+      />
     </div>
   );
 }

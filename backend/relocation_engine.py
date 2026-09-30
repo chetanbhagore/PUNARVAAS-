@@ -68,8 +68,8 @@ def build_allocation_explanation(
 
     return (
         f"{split_prefix}{village} ({tier}, risk {hab.get('composite_risk_score', 0):.2f}) "
-        f"assigned to {site_name} [{jurisdiction}]. "
-        f"Suitability Score: {score:.3f} | Road Access: {access}/10 | Infra Readiness: {infra}/10 | "
+        f"assigned to BLUE ZONE HAVEN: {site_name} [{jurisdiction}]. "
+        f"Suitability Score: {score:.3f} | Road/Boat Access: {access}/10 | Infra Readiness: {infra}/10 | "
         f"Secondary Threat Safety: {(1.0 - sec_risk) * 100:.0f}%. "
         f"Residual shelter capacity: {remaining:,} persons."
     )
@@ -246,6 +246,8 @@ def generate_relocation_plan(
                 "shelter_district": best_site["district"],
                 "site_score": best_score,
                 "suitability_score": best_score,
+                "destination_zone": "BLUE",
+                "is_blue_zone": True,
                 "is_inter_district": (district != best_site["district"]),
                 "site_usable_capacity": best_site["usable_capacity"],
                 "site_remaining_capacity": best_site["remaining_capacity"],
@@ -275,6 +277,7 @@ def generate_relocation_plan(
                     "primary_evacuation_route": primary_route,
                     "bus_convoy_fleet": buses_50,
                     "odraf_escort_vehicles": odraf_trucks,
+                    "rescue_boats_bimb": max(2, int(math.ceil(alloc_headcount / 40.0))) if district in ("Majuli", "Barpeta", "Cachar (Silchar)") else 0,
                     "departure_window": departure_window,
                     "estimated_residence_duration": stay_duration,
                     "repatriation_protocol": "Phased green-tag return authorized only after structural safety clearance by District Collectorate & PWD Engineers"
@@ -317,6 +320,8 @@ def generate_relocation_plan(
             "infrastructure_score": s.get("infrastructure_score", 8.0),
             "secondary_risk_score": s.get("secondary_risk_score", 0.08),
             "shelter_type": s.get("shelter_type", "Cyclone Shelter"),
+            "is_blue_zone": True,
+            "zone": "BLUE",
             "score": avg_score,
             "status": status,
             "notes": s.get("notes", ""),
@@ -375,6 +380,10 @@ DISTRICT_PRIMARY_ROUTES = {
     "Kendrapara": "SH-10 High-Plinth Embankment Corridor (Cuttack-Chandbali)",
     "Ganjam": "NH-16 / Gopalpur Port Heavy-Vehicle Highway",
     "Kandhamal": "SH-41 Western Ghats Engineered Valley Highway",
+    "Majuli": "Majuli River-Ferry Terminal & Garamur Elevated Highway Corridor (SDRF Inflatable Boats + NH-715K)",
+    "Dhemaji": "NH-15 Sisiborgaon-Silapathar High-Embankment Arterial Corridor",
+    "Cachar (Silchar)": "NH-37 / Silchar Bypass High-Ground Transit Route (Safe from Bethukandi Breach)",
+    "Barpeta": "SH-2 / NH-127B Barpeta High-Plinth Embankment Corridor",
     "Rudraprayag (Illustrative Demo)": "NH-107 / NH-58 Char Dham All-Weather Mountain Corridor",
     "Uttarkashi (Illustrative Demo)": "NH-108 Bhagirathi Valley Border Staging Highway",
     "Kinnaur (Illustrative Demo)": "NH-05 Indo-Tibetan Highway Valley Transit Corridor"

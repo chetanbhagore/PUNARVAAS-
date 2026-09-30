@@ -31,12 +31,16 @@ export default function OverviewTab({
   onNavigateTab,
   onSelectAlert,
   onTriggerJudgeDemo,
-  isJudgeDemoLoading
+  isJudgeDemoLoading,
+  onTriggerAssamDemo,
+  isAssamDemoLoading,
+  onOpenAssamModal,
+  onOpenVideoGuide
 }) {
   const activeAlerts = (alerts || []).filter(a => a.status === 'ACTIVE').slice(0, 5);
 
-  const totalHabs = stats?.total_habitations || 153;
-  const districtsCount = stats?.districts_monitored || 4;
+  const totalHabs = stats?.total_habitations || 213;
+  const districtsCount = stats?.districts_monitored || 8;
   const popRed = (stats?.population_red_zone || 0).toLocaleString();
   const popOrange = (stats?.population_orange_zone || 0).toLocaleString();
 
@@ -49,22 +53,68 @@ export default function OverviewTab({
             <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#3D5A73]/15 text-[#3D5A73]">
               Decision-Support System
             </span>
-            <span className="text-xs text-[#5C6B76]">· State Disaster Management Authority</span>
+            <span className="text-xs text-[#5C6B76]">· State Disaster Management Authorities (OSDMA & ASDMA)</span>
           </div>
-          <h1 className="text-xl font-bold text-[#16232E] mt-1">Multi-Hazard Risk Monitoring & Alert Operations</h1>
+          <h1 className="text-xl font-bold text-[#16232E] mt-1">Multi-Hazard Risk Monitoring & Relocation Operations</h1>
           <p className="text-xs text-[#5C6B76] mt-1 max-w-2xl leading-relaxed">
-            Continuously evaluates hazard susceptibility, near-term forecast triggers, socio-physical vulnerability, and disaster history into calibrated habitation risk scores across pilot districts.
+            Continuously evaluates hazard susceptibility, river gauge telemetry (CWC), socio-physical vulnerability (BMTPC), and routes priority evacuees into certified zero-inundation <strong>🔵 BLUE ZONE</strong> safe havens.
           </p>
         </div>
 
-        <button
-          onClick={onTriggerJudgeDemo}
-          disabled={isJudgeDemoLoading}
-          className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded text-sm font-semibold bg-[#3D5A73] hover:bg-[#4E6F8C] active:bg-[#2D4559] text-white transition-colors cursor-pointer shadow-sm border border-[#3D5A73]"
-        >
-          <Play className="w-4 h-4 fill-current" />
-          <span>{isJudgeDemoLoading ? 'Running Demo Sequence...' : 'Launch Judge Demo Mode'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            onClick={onOpenVideoGuide}
+            className="flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold bg-[#16232E] hover:bg-[#253847] text-white transition-colors cursor-pointer shadow-xs border border-[#16232E]"
+          >
+            <span>🎥 Video Demo Guide</span>
+          </button>
+
+          <button
+            onClick={onTriggerJudgeDemo}
+            disabled={isJudgeDemoLoading}
+            className="flex items-center gap-1.5 px-3 py-2 rounded text-xs font-semibold bg-[#3D5A73] hover:bg-[#4E6F8C] active:bg-[#2D4559] text-white transition-colors cursor-pointer shadow-xs border border-[#3D5A73]"
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span>{isJudgeDemoLoading ? 'Running...' : 'Judge Demo (Odisha)'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Assam Flood Crisis & Blue Zone Haven Spotlight Banner */}
+      <div className="bg-gradient-to-r from-[#1E3A8A] via-[#1D4ED8] to-[#2563EB] text-white p-5 rounded-lg border border-[#3B82F6] shadow-md flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="space-y-1.5 max-w-3xl">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white border border-white/30">
+              Assam 2026 Live Deployment Data
+            </span>
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#E0B33C] text-black">
+              🔵 BLUE ZONE SANCTUARY
+            </span>
+          </div>
+          <h2 className="text-base font-bold text-white tracking-tight">
+            How PUNARVAAS Solves the Assam Flood Crisis (Majuli · Dhemaji · Cachar · Barpeta)
+          </h2>
+          <p className="text-xs text-blue-100 leading-relaxed">
+            Eliminates dangerous highway-embankment squatting and charland isolation. Automated CWC gauge telemetry at Nimati Ghat & Annapurna Ghat triggers pre-inundation amphibious SDRF boat routing to certified <strong>Blue Zone Safe Havens (+5.2m above HFL)</strong> with off-grid solar RO water and high-ground cattle refuge.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 shrink-0">
+          <button
+            onClick={onTriggerAssamDemo}
+            disabled={isAssamDemoLoading}
+            className="px-3.5 py-2 rounded bg-[#C13F3F] hover:bg-[#9B2727] text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            <span>🌊 {isAssamDemoLoading ? 'Simulating Flood...' : 'Simulate Assam Brahmaputra Flood'}</span>
+          </button>
+          <button
+            onClick={onOpenAssamModal}
+            className="px-3.5 py-2 rounded bg-white hover:bg-blue-50 text-[#1E3A8A] text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>📘 How We Solve It</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Summary Stat Cards */}
@@ -77,9 +127,9 @@ export default function OverviewTab({
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold text-[#16232E]">{totalHabs}</span>
-            <span className="text-xs text-[#5C6B76]">across {districtsCount} pilot districts</span>
+            <span className="text-xs text-[#5C6B76]">across {districtsCount} regional basins</span>
           </div>
-          <p className="text-[11px] text-[#5C6B76] mt-2">Puri, Kendrapara, Ganjam, Kandhamal</p>
+          <p className="text-[11px] text-[#5C6B76] mt-2">Odisha (Puri, Kendrapara, Ganjam, Kandhamal) + Assam (Majuli, Dhemaji, Cachar, Barpeta)</p>
         </div>
 
         {/* Active Alerts */}
@@ -165,9 +215,9 @@ export default function OverviewTab({
             {/* Representation overlay of Odisha Coastal + Hill clusters */}
             <div className="relative z-10 text-center p-6 bg-white/90 backdrop-blur rounded border border-[#DDE3E8] shadow-md max-w-sm">
               <MapPin className="w-8 h-8 text-[#3D5A73] mx-auto mb-2" />
-              <p className="text-sm font-bold text-[#16232E]">153 Habitations Active on Map</p>
+              <p className="text-sm font-bold text-[#16232E]">213 Habitations Active on Map</p>
               <p className="text-xs text-[#5C6B76] mt-1">
-                Puri Coast (Cyclone), Kendrapara (Flood), Ganjam (Surge), Kandhamal (Landslide)
+                Odisha (Cyclone, Flood, Landslide) & Assam (Brahmaputra/Barak Floods & Erosion)
               </p>
               <div className="mt-3 flex items-center justify-center gap-2 text-xs font-medium">
                 <span className="flex items-center gap-1">
@@ -279,8 +329,8 @@ export default function OverviewTab({
               <span className="text-xs font-bold text-[#16232E]">CWC River Gauges</span>
               <span className="w-2 h-2 rounded-full bg-[#3F8F5F]" />
             </div>
-            <p className="text-[11px] text-[#5C6B76] mt-1">Baitarani & Brahmani Basins</p>
-            <p className="text-[10px] text-[#16232E] font-mono mt-2">Synced: 04 Sep 2026, 10:15 UTC</p>
+            <p className="text-[11px] text-[#5C6B76] mt-1">Brahmaputra, Barak, Baitarani & Brahmani</p>
+            <p className="text-[10px] text-[#16232E] font-mono mt-2">Synced: 04 Sep 2026, 10:15 UTC (Nimati/Annapurna Ghats)</p>
           </div>
 
           <div className="p-3 bg-[#EDF0F2]/50 rounded border border-[#DDE3E8]">

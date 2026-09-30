@@ -99,6 +99,79 @@ ODISHA_DISTRICTS = {
     }
 }
 
+ASSAM_DISTRICTS = {
+    "Majuli": {
+        "hazard": "flood",
+        "lat_range": (26.85, 27.15),
+        "lon_range": (94.05, 94.45),
+        "danger_level": 85.54,  # CWC Nimati Ghat / Brahmaputra River Danger Level
+        "hfl": 87.30,          # CWC Highest Flood Level
+        "villages": [
+            "Kamalabari Ghat Reach", "Salmora Pottery Hamlet (Erosion)", "Garamur Riverfront",
+            "Jengraimukh Char Settlement", "Ahatguri Lowland Colony", "Rawanapar Riparian",
+            "Bongaon Embankment Reach", "Dakhinpat Satra Peripheral", "Koritikur Island Ward",
+            "Phulani Lowland Char", "Bhekulamari Riverbank"
+        ],
+        "history_refs": [
+            {"year": 2024, "event_type": "Brahmaputra Wave-2 Flood", "severity": 0.92},
+            {"year": 2022, "event_type": "Pre-Monsoon Submersion", "severity": 0.88},
+            {"year": 2020, "event_type": "Catastrophic Island Bank Erosion", "severity": 0.85},
+            {"year": 2017, "event_type": "Majuli Embankment Breach", "severity": 0.82}
+        ]
+    },
+    "Dhemaji": {
+        "hazard": "flood",
+        "lat_range": (27.35, 27.75),
+        "lon_range": (94.40, 94.85),
+        "danger_level": 104.50, # Subansiri & Jiadhal river telemetry
+        "hfl": 106.20,
+        "villages": [
+            "Sisiborgaon Flood Basin", "Silapathar Subansiri Reach", "Jonai Riverfront Colony",
+            "Bordoloni Lowland", "Sissikalghar Char Reach", "Machkhowa Embankment",
+            "Gogamukh Riparian Hamlet", "Dhemaji Sadar Ward 3", "Simen Chapori Inundation"
+        ],
+        "history_refs": [
+            {"year": 2024, "event_type": "Jiadhal Flash Flood & Silt Surge", "severity": 0.90},
+            {"year": 2023, "event_type": "Subansiri River Overtopping", "severity": 0.82},
+            {"year": 2020, "event_type": "Dhemaji Embankment Breach", "severity": 0.86}
+        ]
+    },
+    "Cachar (Silchar)": {
+        "hazard": "flood",
+        "lat_range": (24.65, 25.00),
+        "lon_range": (92.65, 93.05),
+        "danger_level": 19.83,  # CWC Annapurna Ghat / Barak River Danger Level
+        "hfl": 21.85,
+        "villages": [
+            "Silchar Bethukandi Breach Zone", "Sonai Riverbank Settlement", "Katigorah Lowlands",
+            "Udharbond Riparian Ward", "Borkhola Floodplain Hamlet", "Tarapur Railway Lowlands",
+            "Rangpur Barak Riverfront", "Meherpur Canal Colony", "Dholai Riparian"
+        ],
+        "history_refs": [
+            {"year": 2022, "event_type": "Bethukandi Dyke Breach (Historic Silchar Submersion)", "severity": 0.98},
+            {"year": 2024, "event_type": "Cyclone Remal Inundation & Barak Surge", "severity": 0.88},
+            {"year": 2020, "event_type": "Barak Valley Flood Overflow", "severity": 0.80}
+        ]
+    },
+    "Barpeta": {
+        "hazard": "flood",
+        "lat_range": (26.15, 26.50),
+        "lon_range": (90.85, 91.25),
+        "danger_level": 42.70,  # Manas & Brahmaputra confluence
+        "hfl": 44.50,
+        "villages": [
+            "Baghbar Char Island Colony", "Mandia Flood Basin", "Chenga Riparian Hamlet",
+            "Kalgachia Lowland Ward", "Alupati Char Settlement", "Tarabari Brahmaputra Bank",
+            "Sarthebari Fringe", "Bhabanipur Lowland"
+        ],
+        "history_refs": [
+            {"year": 2024, "event_type": "Manas & Brahmaputra Convergence Surge", "severity": 0.89},
+            {"year": 2022, "event_type": "Lower Assam Char Erosion & Submergence", "severity": 0.94},
+            {"year": 2019, "event_type": "Assam Megaflood Dislocation", "severity": 0.91}
+        ]
+    }
+}
+
 # Illustrative separate non-Odisha dataset (Dharali, Kedarnath, Kinnaur)
 ILLUSTRATIVE_LOCATIONS = [
     {
@@ -361,6 +434,103 @@ SAFE_SITES_SEED = [
         "distance_from_district_centroid_km": 12.5,
         "shelter_type": "District Transit Complex",
         "notes": "Sub-divisional sports stadium complex with high retaining walls safe from rockfalls."
+    },
+
+    # Assam Certified Safe Shelters (BLUE ZONE: Elevated High-Plinth Flood Havens)
+    {
+        "site_id": "AS-MAJU-SHELTER-01",
+        "name": "Majuli Kamalabari Central High-Plinth Flood Haven",
+        "district": "Majuli",
+        "usable_capacity": 3500,
+        "capacity_persons": 3500,
+        "lat": 26.965,
+        "lon": 94.215,
+        "access_score": 8.8,
+        "infrastructure_score": 9.2,
+        "secondary_risk_score": 0.05,
+        "distance_from_district_centroid_km": 11.4,
+        "shelter_type": "High-Plinth Flood Haven (BLUE ZONE)",
+        "has_water": 1,
+        "has_power": 1,
+        "has_sanitation": 1,
+        "has_medical": 1,
+        "notes": "Engineered 5.2m reinforced mound above Brahmaputra HFL; dedicated SDRF motorboat docking ramp, solar RO water purification, and livestock corral."
+    },
+    {
+        "site_id": "AS-MAJU-SHELTER-02",
+        "name": "Garamur Multipurpose Disaster Relief Campus",
+        "district": "Majuli",
+        "usable_capacity": 2800,
+        "capacity_persons": 2800,
+        "lat": 27.015,
+        "lon": 94.280,
+        "access_score": 8.5,
+        "infrastructure_score": 9.0,
+        "secondary_risk_score": 0.06,
+        "distance_from_district_centroid_km": 14.8,
+        "shelter_type": "High-Plinth Flood Haven (BLUE ZONE)",
+        "has_water": 1,
+        "has_power": 1,
+        "has_sanitation": 1,
+        "has_medical": 1,
+        "notes": "Raised concrete stilt structure safe from bank erosion; 30kVA microgrid, medical clinic bay, and VHF communications terminal."
+    },
+    {
+        "site_id": "AS-DHEM-SHELTER-01",
+        "name": "Dhemaji Sisiborgaon Highland Disaster Complex",
+        "district": "Dhemaji",
+        "usable_capacity": 3400,
+        "capacity_persons": 3400,
+        "lat": 27.485,
+        "lon": 94.550,
+        "access_score": 9.0,
+        "infrastructure_score": 9.1,
+        "secondary_risk_score": 0.04,
+        "distance_from_district_centroid_km": 16.2,
+        "shelter_type": "Embankment Relief Complex (BLUE ZONE)",
+        "has_water": 1,
+        "has_power": 1,
+        "has_sanitation": 1,
+        "has_medical": 1,
+        "notes": "Direct NH-15 arterial corridor; elevated helipad landing zone, deep tube-well water and 200-head cattle pen."
+    },
+    {
+        "site_id": "AS-CACH-SHELTER-01",
+        "name": "Silchar DSA High-Ground Stadium & Relief Complex",
+        "district": "Cachar (Silchar)",
+        "usable_capacity": 4200,
+        "capacity_persons": 4200,
+        "lat": 24.825,
+        "lon": 92.805,
+        "access_score": 9.2,
+        "infrastructure_score": 9.5,
+        "secondary_risk_score": 0.03,
+        "distance_from_district_centroid_km": 5.8,
+        "shelter_type": "Urban High-Ground Haven (BLUE ZONE)",
+        "has_water": 1,
+        "has_power": 1,
+        "has_sanitation": 1,
+        "has_medical": 1,
+        "notes": "Natural geological hillock completely above Barak 2022 historic flood line; 20-bed emergency triage clinic and central kitchen depot."
+    },
+    {
+        "site_id": "AS-BARP-SHELTER-01",
+        "name": "Barpeta Multi-Tier Flood & Erosion Haven",
+        "district": "Barpeta",
+        "usable_capacity": 3600,
+        "capacity_persons": 3600,
+        "lat": 26.325,
+        "lon": 91.015,
+        "access_score": 8.7,
+        "infrastructure_score": 8.9,
+        "secondary_risk_score": 0.05,
+        "distance_from_district_centroid_km": 12.3,
+        "shelter_type": "Multi-Tier Flood Haven (BLUE ZONE)",
+        "has_water": 1,
+        "has_power": 1,
+        "has_sanitation": 1,
+        "has_medical": 1,
+        "notes": "Three-tier RCC structure with boat jetty; flood-resilient sanitation modules and maternal health care ward."
     }
 ]
 
@@ -543,7 +713,109 @@ def generate_habitations() -> List[Dict[str, Any]]:
             }
             habitations.append(hab_dict)
 
-    # 2. Add clearly-labeled illustrative non-Odisha set (for cloudburst / extreme Himalayan cases)
+    # 2. Generate Assam habitations (Brahmaputra & Barak River Basins: Majuli, Dhemaji, Cachar, Barpeta)
+    for district_name, info in ASSAM_DISTRICTS.items():
+        hazard_type = info["hazard"]
+        villages = info["villages"]
+        lat_min, lat_max = info["lat_range"]
+        lon_min, lon_max = info["lon_range"]
+        hist_pool = info["history_refs"]
+        danger_level = info["danger_level"]
+        hfl = info["hfl"]
+
+        num_habs = 15  # 15 habitations per Assam district
+
+        for i in range(num_habs):
+            clean_dist = district_name.split()[0].replace('(', '').replace(')', '')
+            hab_code = f"AS-{clean_dist[:4].upper()}-{hab_counter:03d}"
+            hab_counter += 1
+
+            base_village = villages[i % len(villages)]
+            hamlet_suffix = f"Char-Block {i//len(villages) + 1}" if i >= len(villages) else "Riparian"
+            village_full = f"{base_village} ({hamlet_suffix})"
+
+            lat = round(random.uniform(lat_min, lat_max), 5)
+            lon = round(random.uniform(lon_min, lon_max), 5)
+
+            # Assam rural demographics: High vulnerable (infants, women, elderly) & 62-88% kutcha bamboo dwellings
+            total_pop = random.choice([320, 410, 520, 640, 750, 920, 1150, 1380])
+            vulnerable_pct = round(random.uniform(0.24, 0.46), 2)
+            kutcha_pct = round(random.uniform(0.62, 0.88), 2)
+            nearest_shelter = round(random.uniform(2.4, 11.5), 1)
+
+            # Static hazard susceptibility (Char and riparian settlements have high flood susceptibility)
+            susc_roll = random.random()
+            if susc_roll > 0.55:
+                susc_class = "Very High"
+                susc_score = round(random.uniform(0.82, 0.96), 2)
+            elif susc_roll > 0.25:
+                susc_class = "High"
+                susc_score = round(random.uniform(0.68, 0.81), 2)
+            else:
+                susc_class = "Moderate"
+                susc_score = round(random.uniform(0.48, 0.67), 2)
+
+            sample_count = random.choice([1, 2, 3])
+            sample_hist = random.sample(hist_pool, min(sample_count, len(hist_pool)))
+
+            # Baseline water levels for Assam gauges
+            if i in (1, 4):
+                river_level = danger_level + random.uniform(0.15, 0.65) # Near danger
+            elif i in (2, 5):
+                river_level = danger_level - random.uniform(0.20, 0.80) # Elevated
+            else:
+                river_level = danger_level - random.uniform(1.20, 2.50) # Stable
+
+            trig_score, trig_desc = compute_flood_trigger(river_level, danger_level, hfl)
+            trend = compute_trigger_trend(trig_score)
+            current_trigger_data = {
+                "trend": trend,
+                "trigger_score": trig_score,
+                "river_level_m": round(river_level, 2),
+                "danger_level_m": danger_level,
+                "hfl_m": hfl,
+                "history_5day": generate_5day_history(trig_score, trend, hazard_type)
+            }
+
+            vuln_score = compute_vulnerability_score(vulnerable_pct, kutcha_pct)
+            hist_score = compute_history_score(sample_hist)
+            composite_score, zone = compute_composite_risk(
+                susc_score, trig_score, vuln_score, hist_score
+            )
+            urgency_tier = get_relocation_urgency_tier(zone, trend)
+
+            hab_dict = {
+                "habitation_id": hab_code,
+                "district": district_name,
+                "state": "Assam",
+                "village": village_full,
+                "lat": lat,
+                "lon": lon,
+                "hazard_type": hazard_type,
+                "static_hazard_susceptibility": {
+                    "class": susc_class,
+                    "score": susc_score
+                },
+                "population": {
+                    "total": total_pop,
+                    "vulnerable_pct": vulnerable_pct,
+                    "kutcha_pct": kutcha_pct
+                },
+                "nearest_safe_shelter_km": nearest_shelter,
+                "disaster_history": sample_hist,
+                "history_score": hist_score,
+                "current_trigger": current_trigger_data,
+                "composite_risk_score": composite_score,
+                "ml_risk_probability": composite_score,
+                "zone": zone,
+                "relocation_urgency_tier": urgency_tier,
+                "data_completeness": "full",
+                "is_illustrative": False,
+                "trigger_description": f"CWC Gauge: {round(river_level, 2)}m (Danger: {danger_level}m, HFL: {hfl}m) - {trig_desc}"
+            }
+            habitations.append(hab_dict)
+
+    # 3. Add clearly-labeled illustrative non-Odisha set (for cloudburst / extreme Himalayan cases)
     for loc in ILLUSTRATIVE_LOCATIONS:
         hab_code = f"ILLUST-{loc['hazard'][:4].upper()}-{hab_counter:03d}"
         hab_counter += 1

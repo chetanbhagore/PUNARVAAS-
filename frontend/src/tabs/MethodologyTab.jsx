@@ -61,23 +61,36 @@ export default function MethodologyTab() {
 
         {/* Zone Cutoffs */}
         <div className="pt-3 border-t border-[#DDE3E8]">
-          <h3 className="text-xs font-bold text-[#16232E] mb-2">Zone Classification Thresholds</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-bold text-[#16232E]">Zone Classification Thresholds & Safe Haven Reception Zoning</h3>
+            <span className="text-[10px] font-bold text-[#1D4ED8] bg-[#2563EB]/10 px-2 py-0.5 rounded">
+              Hazard Zoning (Red/Orange/Yellow/Green) ➔ Safe Reception (Blue Zone)
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
             <div className="p-2.5 rounded border border-[#DDE3E8] bg-[#FFFFFF]">
               <span className="font-bold text-[#C13F3F]">RED Zone: &ge; 0.75</span>
-              <p className="text-[11px] text-[#5C6B76] mt-0.5">Acute danger; evacuation or immediate sheltering review.</p>
+              <p className="text-[11px] text-[#5C6B76] mt-0.5">Acute danger; immediate evacuation to designated Blue Zone haven.</p>
             </div>
             <div className="p-2.5 rounded border border-[#DDE3E8] bg-[#FFFFFF]">
               <span className="font-bold text-[#D97A2E]">ORANGE Zone: 0.50 - 0.74</span>
-              <p className="text-[11px] text-[#5C6B76] mt-0.5">Severe danger; short-term relocation & readiness review.</p>
+              <p className="text-[11px] text-[#5C6B76] mt-0.5">Severe danger; short-term staged relocation & fleet staging.</p>
             </div>
             <div className="p-2.5 rounded border border-[#DDE3E8] bg-[#FFFFFF]">
               <span className="font-bold text-[#E0B33C]">YELLOW Zone: 0.30 - 0.49</span>
-              <p className="text-[11px] text-[#5C6B76] mt-0.5">Medium vulnerability; active monitoring status.</p>
+              <p className="text-[11px] text-[#5C6B76] mt-0.5">Medium vulnerability; telemetry alert & asset protection watch.</p>
             </div>
             <div className="p-2.5 rounded border border-[#DDE3E8] bg-[#FFFFFF]">
               <span className="font-bold text-[#3F8F5F]">GREEN Zone: &lt; 0.30</span>
               <p className="text-[11px] text-[#5C6B76] mt-0.5">Low baseline risk; routine seasonal vigilance.</p>
+            </div>
+            <div className="p-2.5 rounded border border-[#2563EB] bg-[#2563EB]/5 shadow-xs">
+              <span className="font-bold text-[#1D4ED8] flex items-center gap-1">
+                <span>🔵 BLUE ZONE: Safe Haven</span>
+              </span>
+              <p className="text-[11px] text-[#1E3A8A] mt-0.5">
+                Zero-inundation safe reception facilities engineered above 100-year HFL (+5.2m plinth) with solar microgrid, RO water, and boat docks.
+              </p>
             </div>
           </div>
         </div>

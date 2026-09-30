@@ -95,6 +95,16 @@ export async function triggerJudgeDemo() {
   return res.json();
 }
 
+export async function triggerAssamFloodDemo() {
+  const res = await fetch(`${API_BASE}/scenarios/simulate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scenario_id: 'assam_brahmaputra_surge' })
+  });
+  if (!res.ok) throw new Error('Failed to trigger Assam Flood Crisis Simulation');
+  return res.json();
+}
+
 export async function fetchMlInfo() {
   const res = await fetch(`${API_BASE}/ml/info`);
   if (!res.ok) throw new Error('Failed to fetch ML info');

@@ -42,6 +42,11 @@ SCENARIO_METADATA = [
         "id": "landslide_monsoon_saturation",
         "name": "Kandhamal Hill Saturation (Landslide Trigger Exceeded)",
         "description": "24-hour rainfall surges to 195mm in Kandhamal hill tracts, breaching GSI's 150mm single-day threshold."
+    },
+    {
+        "id": "assam_brahmaputra_surge",
+        "name": "Assam Brahmaputra & Barak Catastrophic Surge (Assam Flood Crisis)",
+        "description": "Simulates Brahmaputra river wave at Nimati Ghat (Majuli) reaching 86.85m (Danger: 85.54m) & Barak at Annapurna Ghat (Silchar) surging to 21.15m (Danger: 19.83m). Habitations in Majuli, Dhemaji, Silchar, and Barpeta escalate to RED zone with immediate evacuation orders to certified Blue Zone havens."
     }
 ]
 
@@ -152,6 +157,29 @@ def generate_alerts_from_habitations(habitations: List[Dict[str, Any]]) -> List[
                 {"day": "D-1", "trigger_score": 0.35, "value_display": "35%"},
                 {"day": "Today", "trigger_score": 0.20, "value_display": "20%"}
             ]
+        },
+        {
+            "alert_id": "ALT-RESOLVED-003",
+            "hazard_type": "flood",
+            "district": "Majuli",
+            "habitation_ids": ["AS-MAJU-001", "AS-MAJU-002"],
+            "severity": "ORANGE",
+            "composite_risk_score": 0.65,
+            "ml_risk_probability": 0.63,
+            "trigger_trend": "STABLE",
+            "issued_at": "2026-07-10T06:00:00Z",
+            "resolved_at": "2026-07-14T15:30:00Z",
+            "message": "ORANGE ALERT — Brahmaputra flood wave, Kamalabari Ghat, Majuli. Water levels receded below Warning Level (85.20m). Composite risk score: 0.65 (ORANGE zone, trend: STABLE). Recommended action: SHORT_TERM.",
+            "status": "RESOLVED",
+            "recommended_urgency_tier": "SHORT_TERM",
+            "trigger_description": "Nimati Ghat gauge receded below 85.20m after cresting",
+            "history_5day": [
+                {"day": "D-4", "trigger_score": 0.88, "value_display": "88%"},
+                {"day": "D-3", "trigger_score": 0.76, "value_display": "76%"},
+                {"day": "D-2", "trigger_score": 0.62, "value_display": "62%"},
+                {"day": "D-1", "trigger_score": 0.44, "value_display": "44%"},
+                {"day": "Today", "trigger_score": 0.25, "value_display": "25%"}
+            ]
         }
     ]
 
@@ -251,6 +279,53 @@ def apply_scenario(scenario_id: str) -> Dict[str, Any]:
                 susc_score = hab["static_hazard_susceptibility"]["score"]
                 vuln_score = compute_vulnerability_score(hab["population"]["vulnerable_pct"], hab["population"]["kutcha_pct"])
                 hist_score = hab.get("history_score", 0.6)
+                composite, zone = compute_composite_risk(susc_score, trig_score, vuln_score, hist_score)
+                hab["composite_risk_score"] = composite
+                hab["zone"] = zone
+                hab["relocation_urgency_tier"] = get_relocation_urgency_tier(zone, trend)
+
+    elif scenario_id == "assam_brahmaputra_surge":
+        # Escalates Assam flood habitations (Majuli, Dhemaji, Cachar, Barpeta)
+        for hab in habitations:
+            dist = hab["district"]
+            if dist in ("Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta"):
+                if dist == "Majuli":
+                    river_level = 86.85  # Nimati Ghat CWC gauge approaching HFL 87.30m (Danger: 85.54m)
+                    danger_level = 85.54
+                    hfl = 87.30
+                elif dist == "Dhemaji":
+                    river_level = 105.80 # Jiadhal / Subansiri breach (Danger: 104.50m, HFL: 106.20m)
+                    danger_level = 104.50
+                    hfl = 106.20
+                elif dist == "Cachar (Silchar)":
+                    river_level = 21.15  # Barak River Annapurna Ghat (Danger: 19.83m, HFL: 21.85m)
+                    danger_level = 19.83
+                    hfl = 21.85
+                else:  # Barpeta
+                    river_level = 43.95  # Manas / Brahmaputra overflow (Danger: 42.70m, HFL: 44.50m)
+                    danger_level = 42.70
+                    hfl = 44.50
+
+                trig_score, trig_desc = compute_flood_trigger(river_level, danger_level, hfl)
+                trend = "ACUTE"
+                hab["current_trigger"] = {
+                    "trend": trend,
+                    "trigger_score": trig_score,
+                    "river_level_m": river_level,
+                    "danger_level_m": danger_level,
+                    "hfl_m": hfl,
+                    "history_5day": [
+                        {"day": "D-4", "trigger_score": 0.38, "value_display": "38%"},
+                        {"day": "D-3", "trigger_score": 0.52, "value_display": "52%"},
+                        {"day": "D-2", "trigger_score": 0.74, "value_display": "74%"},
+                        {"day": "D-1", "trigger_score": 0.88, "value_display": "88%"},
+                        {"day": "Today", "trigger_score": trig_score, "value_display": f"{int(trig_score*100)}%"}
+                    ]
+                }
+                hab["trigger_description"] = f"Brahmaputra/Barak basin surge: gauge {river_level}m crossed CWC Danger Level ({danger_level}m) toward HFL ({hfl}m)"
+                susc_score = hab["static_hazard_susceptibility"]["score"]
+                vuln_score = compute_vulnerability_score(hab["population"]["vulnerable_pct"], hab["population"]["kutcha_pct"])
+                hist_score = hab.get("history_score", 0.75)
                 composite, zone = compute_composite_risk(susc_score, trig_score, vuln_score, hist_score)
                 hab["composite_risk_score"] = composite
                 hab["zone"] = zone

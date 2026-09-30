@@ -57,9 +57,14 @@ export default function CapacityTab() {
       {/* Overview Header */}
       <div className="bg-[#FFFFFF] border border-[#DDE3E8] rounded p-4 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg font-bold text-[#16232E]">District Carrying Capacity & Shelter Readiness</h1>
-          <p className="text-xs text-[#5C6B76]">
-            Aggregate evacuation capacity balance across primary multipurpose cyclone and flood relief centers.
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-[#16232E]">District Carrying Capacity & Shelter Readiness</h1>
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#2563EB]/15 text-[#1D4ED8] border border-[#2563EB]/30">
+              🔵 BLUE ZONE HAVENS
+            </span>
+          </div>
+          <p className="text-xs text-[#5C6B76] mt-0.5">
+            Carrying capacity balance across zero-inundation multipurpose safe shelters engineered above 100-year Highest Flood Level (HFL).
           </p>
         </div>
       </div>
@@ -84,11 +89,11 @@ export default function CapacityTab() {
                 contentStyle={{ backgroundColor: '#16232E', color: '#fff', fontSize: '11px', borderRadius: '4px' }}
               />
               <Legend
-                formatter={(val) => val === 'atRisk' ? 'At-Risk Population (Red + Orange)' : 'Certified Safe Shelter Capacity'}
+                formatter={(val) => val === 'atRisk' ? 'At-Risk Population (Red + Orange)' : '🔵 Safe Shelter Capacity (BLUE ZONE)'}
                 wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
               />
               <Bar dataKey="atRisk" fill="#D97A2E" name="atRisk" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="safeCapacity" fill="#3D5A73" name="safeCapacity" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="safeCapacity" fill="#2563EB" name="safeCapacity" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -120,7 +125,7 @@ export default function CapacityTab() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#5C6B76]">Net Balance:</span>
-                  <span className={`font-bold ${isSurplus ? 'text-[#3D5A73]' : 'text-[#C13F3F]'}`}>
+                  <span className={`font-bold ${isSurplus ? 'text-[#1D4ED8]' : 'text-[#C13F3F]'}`}>
                     {isSurplus ? `+${d.deficit_or_surplus.toLocaleString()}` : d.deficit_or_surplus.toLocaleString()}
                   </span>
                 </div>
@@ -143,6 +148,7 @@ export default function CapacityTab() {
               <tr>
                 <th className="py-3 px-4">Site ID</th>
                 <th className="py-3 px-4">Shelter Facility Name</th>
+                <th className="py-3 px-4">Zone</th>
                 <th className="py-3 px-4">District</th>
                 <th className="py-3 px-4">Type</th>
                 <th className="py-3 px-4">Capacity (Persons)</th>
@@ -154,6 +160,11 @@ export default function CapacityTab() {
                 <tr key={s.site_id} className="hover:bg-[#EDF0F2]/50 transition-colors">
                   <td className="py-3 px-4 font-mono font-bold text-[#16232E]">{s.site_id}</td>
                   <td className="py-3 px-4 font-medium text-[#16232E]">{s.name}</td>
+                  <td className="py-3 px-4">
+                    <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#2563EB]/15 text-[#1D4ED8] border border-[#2563EB]/30">
+                      🔵 BLUE ZONE
+                    </span>
+                  </td>
                   <td className="py-3 px-4 text-[#5C6B76]">{s.district}</td>
                   <td className="py-3 px-4 text-[#5C6B76]">{s.shelter_type}</td>
                   <td className="py-3 px-4 font-mono font-bold">{s.capacity_persons?.toLocaleString()}</td>

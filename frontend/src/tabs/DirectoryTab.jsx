@@ -117,11 +117,19 @@ export default function DirectoryTab({
             }}
             className="bg-[#EDF0F2] text-[#16232E] border border-[#DDE3E8] rounded px-2.5 py-1.5 font-medium cursor-pointer"
           >
-            <option value="ALL">All Districts</option>
-            <option value="Puri">Puri</option>
-            <option value="Kendrapara">Kendrapara</option>
-            <option value="Ganjam">Ganjam</option>
-            <option value="Kandhamal">Kandhamal</option>
+            <option value="ALL">All Districts (Odisha & Assam)</option>
+            <optgroup label="Odisha Coastal Basin">
+              <option value="Puri">Puri</option>
+              <option value="Kendrapara">Kendrapara</option>
+              <option value="Ganjam">Ganjam</option>
+              <option value="Kandhamal">Kandhamal</option>
+            </optgroup>
+            <optgroup label="Assam Flood Basins">
+              <option value="Majuli">Majuli (River Island)</option>
+              <option value="Dhemaji">Dhemaji (Flash Floods)</option>
+              <option value="Cachar">Cachar (Silchar Breach)</option>
+              <option value="Barpeta">Barpeta (Charlands)</option>
+            </optgroup>
             <option value="Uttarkashi (Illustrative Demo)">Uttarkashi (Illustrative)</option>
           </select>
 

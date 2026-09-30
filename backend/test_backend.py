@@ -66,7 +66,7 @@ from relocation_engine import generate_relocation_plan, get_habitation_relocatio
 
 def test_relocation_mechanism():
     safe_sites = get_safe_sites()
-    assert 8 <= len(safe_sites) <= 15, f"Expected 8-15 safe sites, got {len(safe_sites)}"
+    assert 8 <= len(safe_sites) <= 25, f"Expected 8-25 safe sites, got {len(safe_sites)}"
 
     # Verify site schemas
     for s in safe_sites:
@@ -220,6 +220,25 @@ def test_shelter_readiness_heartbeat():
     assert restored["has_water"] is True
     print(f"PASS: Shelter Readiness Heartbeat verified for {test_site['name']}.")
 
+def test_assam_flood_scenario():
+    res = apply_scenario("assam_brahmaputra_surge")
+    alerts = get_all_alerts(status_filter="ACTIVE")
+    assam_alerts = [a for a in alerts if a["district"] in ("Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta")]
+    assert len(assam_alerts) > 0, "Expected active alerts for Assam flood crisis scenario"
+    
+    red_assam = [a for a in assam_alerts if a["severity"] == "RED"]
+    assert len(red_assam) > 0, "Expected RED alerts in Assam for Brahmaputra surge"
+    
+    habs = get_all_habitations()
+    safe_sites = get_safe_sites()
+    plan = generate_relocation_plan(habs, safe_sites)
+    
+    # Check that allocations into Blue Zone exist for Assam habitations
+    assam_allocs = [a for a in plan["allocations"] if a["district"] in ("Majuli", "Dhemaji", "Cachar (Silchar)", "Barpeta")]
+    assert len(assam_allocs) > 0, "Expected priority allocations for Assam habitations"
+    assert all(a.get("is_blue_zone") is True for a in assam_allocs), "All allocations must route to Blue Zone shelters"
+    print(f"PASS: Assam Flood Crisis scenario verified ({len(red_assam)} RED alerts, {len(assam_allocs)} Blue Zone allocations).")
+
 if __name__ == "__main__":
     init_db()
     test_habitations_and_hazards()
@@ -229,4 +248,5 @@ if __name__ == "__main__":
     test_relocation_mechanism()
     test_evacuation_board_and_blocker_lifecycle()
     test_shelter_readiness_heartbeat()
+    test_assam_flood_scenario()
     print("ALL BACKEND V2 TESTS PASSED SUCCESSFULLY!")

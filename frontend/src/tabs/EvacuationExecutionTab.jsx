@@ -28,6 +28,12 @@ import {
 
 const BLOCKER_TAXONOMY = [
   {
+    code: 'RIVER_CREEK_SUBMERGED',
+    label: 'River / Creek Submerged (Charland Cut-off)',
+    desc: 'Island or riverine char cut off by Brahmaputra/Mahanadi flood surge; regular road vehicles cannot reach.',
+    suggestedResource: 'SDRF Inflatable Motor Boat (BIMB)'
+  },
+  {
     code: 'ROAD_INUNDATED',
     label: 'Road / Culvert Inundated',
     desc: 'Water level above road threshold; regular vehicles cannot pass.',
@@ -68,7 +74,7 @@ const BLOCKER_TAXONOMY = [
 const NEXT_ACTION = {
   UNCONTACTED: { status: 'CONTACTED', label: 'Mark Contacted', color: 'bg-[#3D5A73] text-white hover:bg-[#16232E]' },
   CONTACTED: { status: 'PICKED_UP', label: 'Mark Picked Up', color: 'bg-[#D97A2E] text-white hover:bg-[#A24F0B]' },
-  PICKED_UP: { status: 'CHECKED_IN', label: 'Mark Checked In', color: 'bg-[#3F8F5F] text-white hover:bg-[#23633C]' },
+  PICKED_UP: { status: 'CHECKED_IN', label: 'Check Into Blue Zone', color: 'bg-[#2563EB] text-white hover:bg-[#1D4ED8]' },
   BLOCKED: { status: 'CONTACTED', label: 'Resume Contact', color: 'bg-[#3D5A73] text-white hover:bg-[#16232E]' }
 };
 
@@ -76,7 +82,7 @@ const STATUS_STYLE = {
   UNCONTACTED: 'bg-[#E0B33C]/15 text-[#6B5200] border-[#E0B33C]/40',
   CONTACTED: 'bg-[#3D5A73]/10 text-[#3D5A73] border-[#3D5A73]/30',
   PICKED_UP: 'bg-[#D97A2E]/10 text-[#A24F0B] border-[#D97A2E]/30',
-  CHECKED_IN: 'bg-[#3F8F5F]/10 text-[#23633C] border-[#3F8F5F]/30',
+  CHECKED_IN: 'bg-[#2563EB]/15 text-[#1D4ED8] border-[#2563EB]/40 font-semibold',
   BLOCKED: 'bg-[#C13F3F]/10 text-[#9B2727] border-[#C13F3F]/30'
 };
 
@@ -439,7 +445,7 @@ export default function EvacuationExecutionTab() {
                       </h3>
                       <span className="text-xs text-[#5C6B76] ml-2">
                         <Users className="w-3.5 h-3.5 inline mr-1 text-[#3D5A73]" />
-                        <strong className="text-[#16232E]">{item.allocated_headcount.toLocaleString()}</strong> people assigned → <strong className="text-[#16232E]">{item.site_name}</strong>
+                        <strong className="text-[#16232E]">{item.allocated_headcount.toLocaleString()}</strong> people assigned → <strong className="text-[#1D4ED8]">🔵 BLUE ZONE: {item.site_name}</strong>
                       </span>
                     </div>
 
@@ -559,6 +565,7 @@ export default function EvacuationExecutionTab() {
                 />
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {[
+                    'SDRF Inflatable Motor Boat (BIMB)',
                     '4x4 High-Clearance Tractor',
                     'NDRF Inflatable Motorized Boat',
                     '108 Paramedic / Stretcher Van',

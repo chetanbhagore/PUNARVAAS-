@@ -356,12 +356,15 @@ export default function RelocationTab({
       <div className="bg-[#FFFFFF] border border-[#DDE3E8] p-4 rounded-lg shadow-sm space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#DDE3E8] pb-2.5">
           <div>
-            <h2 className="text-sm font-bold text-[#16232E] flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-[#3F8F5F]" />
+            <h2 className="text-sm font-bold text-[#16232E] flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#2563EB]" />
               <span>Certified Safe Shelters Capacity Matrix</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#2563EB]/15 text-[#1D4ED8] border border-[#2563EB]/30">
+                🔵 BLUE ZONE HAVENS
+              </span>
             </h2>
             <p className="text-xs text-[#5C6B76]">
-              Real-time occupancy levels, road access ratings, and assigned inbound villages across regional safe havens.
+              Real-time occupancy levels, road access ratings, and assigned inbound villages across zero-inundation safe havens engineered above 100-year HFL.
             </p>
           </div>
 
@@ -399,15 +402,20 @@ export default function RelocationTab({
                 onClick={() => setSelectedShelterFilter(isSelected ? 'ALL' : site.site_id)}
                 className={`p-3 rounded-lg border transition-all cursor-pointer space-y-2 text-xs ${
                   isSelected
-                    ? 'border-[#3D5A73] bg-[#3D5A73]/5 ring-2 ring-[#3D5A73]'
-                    : 'border-[#DDE3E8] bg-[#FFFFFF] hover:border-[#3D5A73]/60 hover:shadow-xs'
+                    ? 'border-[#2563EB] bg-[#2563EB]/5 ring-2 ring-[#2563EB]'
+                    : 'border-[#DDE3E8] bg-[#FFFFFF] hover:border-[#2563EB]/60 hover:shadow-xs'
                 }`}
               >
                 <div className="flex items-start justify-between gap-1">
                   <div>
-                    <span className="text-[9px] font-mono text-[#5C6B76] block">{site.site_id}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] font-mono text-[#5C6B76] block">{site.site_id}</span>
+                      <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-[#2563EB]/15 text-[#1D4ED8]">
+                        BLUE ZONE
+                      </span>
+                    </div>
                     <h4 className="font-bold text-[#16232E] leading-snug">{site.name}</h4>
-                    <p className="text-[10px] text-[#5C6B76]">{site.district} · {site.shelter_type || 'Cyclone Center'}</p>
+                    <p className="text-[10px] text-[#5C6B76]">{site.district} · {site.shelter_type || 'Safe Haven'}</p>
                   </div>
                   <span
                     className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase shrink-0 ${
@@ -415,7 +423,7 @@ export default function RelocationTab({
                         ? 'bg-[#C13F3F]/10 text-[#C13F3F]'
                         : isNearCapacity
                         ? 'bg-[#D97A2E]/10 text-[#D97A2E]'
-                        : 'bg-[#3F8F5F]/10 text-[#3F8F5F]'
+                        : 'bg-[#2563EB]/15 text-[#1D4ED8]'
                     }`}
                   >
                     {isFull ? 'FULL' : isNearCapacity ? 'HIGH UTIL' : 'AVAILABLE'}
@@ -433,14 +441,14 @@ export default function RelocationTab({
                   <div className="w-full bg-[#DDE3E8] h-2 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all ${
-                        isFull ? 'bg-[#C13F3F]' : isNearCapacity ? 'bg-[#D97A2E]' : 'bg-[#3F8F5F]'
+                        isFull ? 'bg-[#C13F3F]' : isNearCapacity ? 'bg-[#D97A2E]' : 'bg-[#2563EB]'
                       }`}
                       style={{ width: `${Math.min(100, util)}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between text-[9px] text-[#5C6B76] pt-0.5">
                     <span className="font-semibold">{util}% Plinth Capacity</span>
-                    <span className="font-semibold text-[#3F8F5F]">{remainingCap.toLocaleString()} Headroom</span>
+                    <span className="font-semibold text-[#1D4ED8]">{remainingCap.toLocaleString()} Headroom</span>
                   </div>
                 </div>
 
@@ -515,11 +523,19 @@ export default function RelocationTab({
             onChange={(e) => setSelectedDistrict(e.target.value)}
             className="bg-white border border-[#DDE3E8] rounded px-2.5 py-1 text-xs text-[#16232E] focus:outline-none focus:border-[#3D5A73]"
           >
-            <option value="ALL">All Districts</option>
-            <option value="Puri">Puri</option>
-            <option value="Kendrapara">Kendrapara</option>
-            <option value="Ganjam">Ganjam</option>
-            <option value="Kandhamal">Kandhamal</option>
+            <option value="ALL">All Districts (Odisha & Assam)</option>
+            <optgroup label="Odisha Coastal Basin">
+              <option value="Puri">Puri</option>
+              <option value="Kendrapara">Kendrapara</option>
+              <option value="Ganjam">Ganjam</option>
+              <option value="Kandhamal">Kandhamal</option>
+            </optgroup>
+            <optgroup label="Assam Flood Basins">
+              <option value="Majuli">Majuli (River Island)</option>
+              <option value="Dhemaji">Dhemaji (Flash Floods)</option>
+              <option value="Cachar">Cachar (Silchar Breach)</option>
+              <option value="Barpeta">Barpeta (Charlands)</option>
+            </optgroup>
           </select>
 
           {/* Urgency Tier Filter */}
@@ -599,7 +615,8 @@ export default function RelocationTab({
                       </td>
                       <td className="py-3 px-4">
                         <div className="font-semibold text-[#16232E] flex items-center gap-1.5">
-                          <Building2 className="w-3.5 h-3.5 text-[#3D5A73] shrink-0" />
+                          <span className="w-2 h-2 rounded-full bg-[#2563EB] shrink-0 ring-2 ring-[#3B82F6]/50" />
+                          <span className="text-[10px] font-bold text-[#1D4ED8] bg-[#2563EB]/10 px-1 rounded">BLUE ZONE</span>
                           <span>{a.site_name || a.safe_site_name}</span>
                         </div>
                         <div className="text-[10px] text-[#5C6B76] flex items-center gap-1 mt-0.5">
@@ -608,6 +625,8 @@ export default function RelocationTab({
                           <span className={isIntra ? 'text-[#3F8F5F] font-semibold' : 'text-[#D97A2E] font-semibold'}>
                             {isIntra ? 'Intra-district' : 'Inter-district fallback'}
                           </span>
+                          <span>•</span>
+                          <span className="text-[#2563EB] font-medium">Safe Haven</span>
                         </div>
                       </td>
                       <td className="py-3 px-3 text-center">
@@ -658,7 +677,7 @@ export default function RelocationTab({
                                   {a.allocation_id}
                                 </span>
                                 <h3 className="text-sm font-bold text-[#16232E]">
-                                  Operational Relocation Dossier: {a.village} &rarr; {a.site_name || a.safe_site_name}
+                                  Operational Relocation Dossier: {a.village} &rarr; <span className="text-[#1D4ED8]">🔵 BLUE ZONE: {a.site_name || a.safe_site_name}</span>
                                 </h3>
                               </div>
                               <div className="flex items-center gap-2 shrink-0">
@@ -677,12 +696,12 @@ export default function RelocationTab({
                               {/* 1. WHERE: Designated Safe Haven Facility (6 cols) */}
                               <div className="lg:col-span-6 bg-[#EDF0F2]/40 p-3.5 rounded border border-[#DDE3E8] space-y-2.5">
                                 <div className="flex items-center justify-between border-b border-[#DDE3E8] pb-1.5">
-                                  <div className="flex items-center gap-1.5 text-[#3D5A73] font-bold text-xs">
-                                    <Building2 className="w-4 h-4" />
-                                    <span>WHERE: Designated Safe Shelter Facility</span>
+                                  <div className="flex items-center gap-1.5 text-[#1D4ED8] font-bold text-xs">
+                                    <Building2 className="w-4 h-4 text-[#2563EB]" />
+                                    <span>WHERE: Designated Safe Shelter (🔵 BLUE ZONE HAVEN)</span>
                                   </div>
-                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white border border-[#DDE3E8] text-[#16232E]">
-                                    {a.site_id || a.safe_site_id}
+                                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#2563EB]/10 border border-[#2563EB]/30 text-[#1D4ED8]">
+                                    {a.site_id || a.safe_site_id} · BLUE ZONE
                                   </span>
                                 </div>
 
@@ -919,6 +938,14 @@ export default function RelocationTab({
                                         {a.transit_logistics?.odraf_escort_vehicles || Math.max(2, Math.ceil(headcount / 150) + 1)} Escorts
                                       </strong>
                                     </div>
+                                    {Boolean(a.transit_logistics?.rescue_boats_bimb || (a.district && ['Majuli', 'Barpeta', 'Cachar'].includes(a.district))) && (
+                                      <div className="bg-[#2563EB]/50 px-3 py-1.5 rounded text-center border border-[#3B82F6]/60">
+                                        <span className="text-[10px] text-[#BFDBFE] block">SDRF Rescue Boats</span>
+                                        <strong className="text-xs text-white">
+                                          {a.transit_logistics?.rescue_boats_bimb || Math.max(2, Math.ceil(headcount / 40))} Inflatable BIMB
+                                        </strong>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 

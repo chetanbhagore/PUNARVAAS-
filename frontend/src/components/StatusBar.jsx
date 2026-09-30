@@ -1,11 +1,19 @@
 import React from 'react';
 import { Play, Database, ShieldAlert } from 'lucide-react';
 
-export default function StatusBar({ stats, onTriggerJudgeDemo, isJudgeDemoLoading }) {
+export default function StatusBar({ 
+  stats, 
+  onTriggerJudgeDemo, 
+  isJudgeDemoLoading,
+  onTriggerAssamDemo,
+  isAssamDemoLoading,
+  onOpenAssamModal,
+  onOpenVideoGuide
+}) {
   const redCount = stats?.active_alerts_red ?? 0;
   const orangeCount = stats?.active_alerts_orange ?? 0;
   const yellowCount = stats?.active_alerts_yellow ?? 0;
-  const districtsCount = stats?.districts_monitored ?? 4;
+  const districtsCount = stats?.districts_monitored ?? 8;
   const lastRefresh = stats?.last_refresh ?? "Just now";
 
   return (
@@ -28,13 +36,7 @@ export default function StatusBar({ stats, onTriggerJudgeDemo, isJudgeDemoLoadin
         <span className="text-[#EDF0F2]/40">·</span>
 
         <span className="text-[#EDF0F2]/80">
-          Districts Monitored: <strong className="text-white font-semibold">{districtsCount}</strong>
-        </span>
-
-        <span className="text-[#EDF0F2]/40">·</span>
-
-        <span className="text-[#EDF0F2]/80">
-          Last Data Refresh: <span className="text-[#EDF0F2] font-mono text-xs">{lastRefresh}</span>
+          Districts: <strong className="text-white font-semibold">{districtsCount} (Odisha + Assam)</strong>
         </span>
 
         <span className="text-[#EDF0F2]/40">·</span>
@@ -46,16 +48,33 @@ export default function StatusBar({ stats, onTriggerJudgeDemo, isJudgeDemoLoadin
         </div>
       </div>
 
-      {/* Right: Judge Demo Mode Action */}
-      <div className="flex items-center gap-3">
+      {/* Right: Quick Demo & Video Actions */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onOpenVideoGuide}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-all cursor-pointer shadow-xs border border-blue-400"
+          title="Step-by-step interactive walkthrough assistant for recording prototype video"
+        >
+          <span>🎥 Video Demo Flow</span>
+        </button>
+
+        <button
+          onClick={onTriggerAssamDemo}
+          disabled={isAssamDemoLoading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-[#C13F3F] hover:bg-[#9B2727] text-white transition-colors cursor-pointer border border-red-400 disabled:opacity-50"
+          title="Simulates Brahmaputra Wave-2 surge in Majuli, Dhemaji, Cachar and Barpeta"
+        >
+          <span>🌊 {isAssamDemoLoading ? 'Surging...' : 'Assam Demo'}</span>
+        </button>
+
         <button
           onClick={onTriggerJudgeDemo}
           disabled={isJudgeDemoLoading}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-[#3D5A73] hover:bg-[#4E6F8C] active:bg-[#2D4559] text-white transition-colors cursor-pointer border border-[#5C6B76]/50"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-[#3D5A73] hover:bg-[#4E6F8C] active:bg-[#2D4559] text-white transition-colors cursor-pointer border border-[#5C6B76]/50 disabled:opacity-50"
           title="Simulates rapid Orange to Red river flood surge for live judging evaluation"
         >
           <Play className="w-3.5 h-3.5 fill-current" />
-          {isJudgeDemoLoading ? 'Running Demo...' : 'Judge Demo Mode'}
+          {isJudgeDemoLoading ? 'Running...' : 'Judge Demo'}
         </button>
       </div>
     </header>

@@ -1,5 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, Polyline, useMap } from 'react-leaflet';
+
+function MapCameraController({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center && Array.isArray(center) && center.length === 2) {
+      map.flyTo(center, zoom || 8, { duration: 1.2 });
+    }
+  }, [center, zoom, map]);
+  return null;
+}
 import {
   Filter,
   Layers,
@@ -187,8 +197,16 @@ export default function LiveMapTab({
     );
   }, [selectedHabitation, relocationPlan]);
 
-  // Center of Odisha pilot districts (roughly between Puri, Kendrapara, Ganjam, Kandhamal)
+  // Center of pilot districts & dynamic camera state
   const mapCenter = [20.10, 85.30];
+  const [cameraState, setCameraState] = useState({ center: [20.10, 85.30], zoom: 7 });
+
+  // Auto-focus camera on selected habitation
+  useEffect(() => {
+    if (selectedHabitation?.lat && selectedHabitation?.lon) {
+      setCameraState({ center: [selectedHabitation.lat, selectedHabitation.lon], zoom: 11 });
+    }
+  }, [selectedHabitation]);
 
   return (
     <div className="relative h-[calc(100vh-95px)] flex flex-col rounded border border-[#DDE3E8] bg-white overflow-hidden shadow-sm">
@@ -200,17 +218,60 @@ export default function LiveMapTab({
             <span>Map Layers:</span>
           </div>
 
+          {/* Quick Focus Controls for Easy Prototype Video Flow */}
+          <div className="flex items-center gap-1.5 pr-2 border-r border-[#DDE3E8]">
+            <span className="text-[10px] text-[#5C6B76] font-semibold uppercase">Focus:</span>
+            <button
+              type="button"
+              onClick={() => {
+                setDistrictFilter('ALL');
+                setCameraState({ center: [26.40, 93.30], zoom: 8 });
+              }}
+              className="px-2.5 py-1 bg-[#2563EB]/10 hover:bg-[#2563EB]/25 text-[#1D4ED8] font-bold rounded border border-[#2563EB]/40 flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+              title="Fly to Assam Brahmaputra & Barak River Flood Basin (Majuli, Silchar, Dhemaji)"
+            >
+              <span>🌊 Assam Basin</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDistrictFilter('ALL');
+                setCameraState({ center: [20.10, 85.30], zoom: 8 });
+              }}
+              className="px-2.5 py-1 bg-[#EDF0F2] hover:bg-[#DDE3E8] text-[#3D5A73] font-semibold rounded border border-[#DDE3E8] flex items-center gap-1 cursor-pointer transition-colors"
+              title="Fly to Odisha Coastal Pilot"
+            >
+              <span>🏖️ Odisha Pilot</span>
+            </button>
+          </div>
+
           {/* District Filter */}
           <select
             value={districtFilter}
-            onChange={(e) => setDistrictFilter(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDistrictFilter(val);
+              if (['Majuli', 'Dhemaji', 'Cachar (Silchar)', 'Barpeta'].includes(val)) {
+                setCameraState({ center: [26.40, 93.30], zoom: 8 });
+              } else if (['Puri', 'Kendrapara', 'Ganjam', 'Kandhamal'].includes(val)) {
+                setCameraState({ center: [20.10, 85.30], zoom: 8 });
+              }
+            }}
             className="bg-[#EDF0F2] text-[#16232E] border border-[#DDE3E8] rounded px-2.5 py-1.5 font-medium cursor-pointer focus:outline-none focus:border-[#3D5A73]"
           >
-            <option value="ALL">All Districts</option>
-            <option value="Puri">Puri (Coastal/Cyclone)</option>
-            <option value="Kendrapara">Kendrapara (River Delta/Flood)</option>
-            <option value="Ganjam">Ganjam (Coastal Surge)</option>
-            <option value="Kandhamal">Kandhamal (Western Hills/Landslide)</option>
+            <option value="ALL">All Districts (Odisha & Assam)</option>
+            <optgroup label="Assam Flood Basins (Brahmaputra & Barak)">
+              <option value="Majuli">🌊 Majuli (River Island & Erosion)</option>
+              <option value="Dhemaji">🌊 Dhemaji (Upper Floodway & Jiadhal)</option>
+              <option value="Cachar (Silchar)">🌊 Cachar / Silchar (Barak Valley)</option>
+              <option value="Barpeta">🌊 Barpeta (Lower Floodplain & Char)</option>
+            </optgroup>
+            <optgroup label="Odisha Multi-Hazard Pilot">
+              <option value="Puri">Puri (Coastal/Cyclone)</option>
+              <option value="Kendrapara">Kendrapara (River Delta/Flood)</option>
+              <option value="Ganjam">Ganjam (Coastal Surge)</option>
+              <option value="Kandhamal">Kandhamal (Western Hills/Landslide)</option>
+            </optgroup>
             <option value="Uttarkashi (Illustrative Demo)">Uttarkashi (Illustrative Demo)</option>
           </select>
 
@@ -221,8 +282,8 @@ export default function LiveMapTab({
             className="bg-[#EDF0F2] text-[#16232E] border border-[#DDE3E8] rounded px-2.5 py-1.5 font-medium cursor-pointer focus:outline-none focus:border-[#3D5A73]"
           >
             <option value="ALL">All Hazard Types</option>
+            <option value="flood">River Basin Flood (Assam & Odisha)</option>
             <option value="cyclone_coastal">Cyclone & Coastal Surge</option>
-            <option value="flood">River Basin Flood</option>
             <option value="landslide">Hill Tract Landslide</option>
             <option value="cloudburst">Cloudburst (Illustrative)</option>
           </select>
@@ -275,19 +336,19 @@ export default function LiveMapTab({
               </select>
             )}
 
-            {/* Safe Shelters Toggle */}
+            {/* Blue Zone Safe Shelters Toggle */}
             <button
               type="button"
               onClick={() => setShowShelters(!showShelters)}
               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded font-semibold cursor-pointer transition-colors border ${
                 showShelters
-                  ? 'bg-[#3D5A73] text-white border-[#3D5A73]'
+                  ? 'bg-[#2563EB] text-white border-[#2563EB] shadow-xs ring-2 ring-[#3B82F6]/30'
                   : 'bg-[#EDF0F2] text-[#5C6B76] border-[#DDE3E8] hover:text-[#16232E]'
               }`}
-              title="Toggle certified multipurpose disaster shelters layer"
+              title="Toggle Certified Safe Relocation Centres (Blue Zone)"
             >
-              <Building2 className="w-3.5 h-3.5 text-[#3F8F5F]" />
-              <span>Safe Shelters</span>
+              <Building2 className="w-3.5 h-3.5" />
+              <span>🔵 Blue Zone Havens</span>
               <span
                 className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
                   showShelters ? 'bg-white/20 text-white' : 'bg-[#DDE3E8] text-[#5C6B76]'
@@ -332,7 +393,7 @@ export default function LiveMapTab({
           )}
           {showShelters && (
             <span>
-              Shelters: <strong className="text-[#3F8F5F] font-bold">{filteredSafeSites.length}</strong>
+              Blue Zone Havens: <strong className="text-[#2563EB] font-bold">{filteredSafeSites.length}</strong>
             </span>
           )}
         </div>
@@ -342,10 +403,12 @@ export default function LiveMapTab({
       <div className="flex-1 relative z-0">
         <MapContainer
           center={mapCenter}
-          zoom={8}
+          zoom={7}
           scrollWheelZoom={true}
           className="h-full w-full"
         >
+          <MapCameraController center={cameraState.center} zoom={cameraState.zoom} />
+
           {/* Base Map TileLayer */}
           <TileLayer
             key={baseMap}
@@ -552,196 +615,210 @@ export default function LiveMapTab({
             );
           })}
 
-          {/* 2. Certified Multipurpose Safe Shelters Layer */}
-          {filteredSafeSites.map((site) => {
-            if (!site.lat || !site.lon) return null;
+          {/* 2. Certified Safe Shelters Layer (BLUE ZONE: High-Plinth Relocation Havens) */}
+          {showShelters &&
+            filteredSafeSites.map((site) => {
+              if (!site.lat || !site.lon) return null;
 
-            const isFullyUtilized = (site.utilization_pct || 0) >= 95;
-            const isNearCapacity = (site.utilization_pct || 0) >= 70;
-            const isHighlighted = highlightedShelterId === site.site_id;
+              const isHighlighted = highlightedShelterId === site.site_id;
+              const allocatedCount = site.allocated_total || site.allocated_population || 0;
+              const usableCap = site.usable_capacity || site.capacity_persons || 2000;
+              const remainingCap = site.remaining_capacity !== undefined ? site.remaining_capacity : Math.max(0, usableCap - allocatedCount);
+              const utilPct = site.utilization_pct !== undefined ? site.utilization_pct : Math.round((allocatedCount / usableCap) * 100);
 
-            const shelterBorderColor = isFullyUtilized
-              ? '#C13F3F'
-              : isNearCapacity
-              ? '#D97A2E'
-              : '#3F8F5F';
+              // Blue Zone Colors: Royal Cobalt Blue with glowing safe-haven halo
+              const bluePrimary = '#2563EB';
+              const blueHalo = '#3B82F6';
 
-            const allocatedCount = site.allocated_total || site.allocated_population || 0;
-            const usableCap = site.usable_capacity || site.capacity_persons || 2000;
-            const remainingCap = site.remaining_capacity !== undefined ? site.remaining_capacity : Math.max(0, usableCap - allocatedCount);
-            const utilPct = site.utilization_pct !== undefined ? site.utilization_pct : Math.round((allocatedCount / usableCap) * 100);
+              return (
+                <React.Fragment key={`shelter-${site.site_id}`}>
+                  {/* Outer Pulsing Safe Perimeter Halo Ring */}
+                  <CircleMarker
+                    center={[site.lat, site.lon]}
+                    radius={isHighlighted ? 26 : 18}
+                    pathOptions={{
+                      fillColor: blueHalo,
+                      fillOpacity: isHighlighted ? 0.38 : 0.20,
+                      color: bluePrimary,
+                      weight: isHighlighted ? 2.5 : 1.5,
+                      dashArray: '4, 4'
+                    }}
+                    interactive={false}
+                  />
 
-            return (
-              <React.Fragment key={`shelter-${site.site_id}`}>
-                {/* Pulsing Beacon Halo Ring */}
-                <CircleMarker
-                  center={[site.lat, site.lon]}
-                  radius={isHighlighted ? 22 : 16}
-                  pathOptions={{
-                    fillColor: shelterBorderColor,
-                    fillOpacity: isHighlighted ? 0.35 : 0.18,
-                    color: shelterBorderColor,
-                    weight: 1.5,
-                    dashArray: '3, 3'
-                  }}
-                  interactive={false}
-                />
-
-                {/* Primary Solid Shelter Circle Marker */}
-                <CircleMarker
-                  center={[site.lat, site.lon]}
-                  radius={isHighlighted ? 12 : 10}
-                  pathOptions={{
-                    fillColor: isHighlighted ? '#E0B33C' : shelterBorderColor,
-                    fillOpacity: 0.95,
-                    color: '#FFFFFF',
-                    weight: 2.5
-                  }}
-                  eventHandlers={{
-                    click: () => {
-                      setHighlightedShelterId(site.site_id);
-                    }
-                  }}
-                >
-                  <Tooltip direction="top" offset={[0, -8]} opacity={0.98}>
-                    <div className="text-xs p-1 space-y-1">
-                      <p className="font-bold text-white flex items-center gap-1.5 border-b border-white/20 pb-1">
-                        <Building2 className="w-3.5 h-3.5 text-[#80D8FF]" />
-                        <span>{site.name}</span>
-                      </p>
-                      <p className="text-[11px] text-white/90">
-                        {site.district} · {site.shelter_type || 'Cyclone Shelter'}
-                      </p>
-                      <div className="pt-1 text-[11px]">
-                        <span className="text-white/80">Capacity: </span>
-                        <strong className="text-white">
-                          {allocatedCount.toLocaleString()} / {usableCap.toLocaleString()} ({utilPct}%)
-                        </strong>
-                      </div>
-                      <div className="text-[10px] text-[#A7FFEB]">
-                        Headroom: {remainingCap.toLocaleString()} persons available
-                      </div>
-                    </div>
-                  </Tooltip>
-
-                  <Popup>
-                    <div className="text-xs space-y-2.5 p-1 min-w-[270px]">
-                      <div className="flex items-center justify-between border-b border-[#DDE3E8] pb-1.5">
-                        <div className="flex items-center gap-1.5">
-                          <Building2 className="w-4 h-4 text-[#3F8F5F]" />
-                          <span className="font-bold text-[#16232E] text-xs">{site.name}</span>
+                  {/* Primary Solid Blue Zone Marker */}
+                  <CircleMarker
+                    center={[site.lat, site.lon]}
+                    radius={isHighlighted ? 14 : 11}
+                    pathOptions={{
+                      fillColor: isHighlighted ? '#1D4ED8' : bluePrimary,
+                      fillOpacity: 0.98,
+                      color: '#FFFFFF',
+                      weight: 3.0
+                    }}
+                    eventHandlers={{
+                      click: () => {
+                        setHighlightedShelterId(site.site_id);
+                      }
+                    }}
+                  >
+                    <Tooltip direction="top" offset={[0, -10]} opacity={0.98}>
+                      <div className="text-xs p-1.5 space-y-1">
+                        <div className="flex items-center gap-1.5 border-b border-white/20 pb-1">
+                          <span className="bg-[#2563EB] text-white px-1.5 py-0.2 rounded text-[9px] font-bold">
+                            🔵 BLUE ZONE
+                          </span>
+                          <strong className="text-white text-xs">{site.name}</strong>
                         </div>
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#3D5A73] text-white">
-                          {site.shelter_type || 'SAFE HAVEN'}
-                        </span>
+                        <p className="text-[11px] text-white/90">
+                          {site.district} · {site.shelter_type || 'Flood Safe Haven'}
+                        </p>
+                        <div className="pt-0.5 text-[11px] flex items-center justify-between gap-2">
+                          <span className="text-white/80">Capacity: </span>
+                          <strong className="text-white">
+                            {allocatedCount.toLocaleString()} / {usableCap.toLocaleString()} ({utilPct}%)
+                          </strong>
+                        </div>
+                        <div className="text-[10px] text-[#A7FFEB] font-medium">
+                          ✓ Plinth +5.2m Above HFL · {remainingCap.toLocaleString()} slots available
+                        </div>
                       </div>
+                    </Tooltip>
 
-                      <div>
-                        <p className="text-[11px] text-[#5C6B76]">{site.district} District · {site.notes}</p>
-
-                        {/* Capacity Meter */}
-                        <div className="mt-2 space-y-1 bg-[#EDF0F2] p-2.5 rounded border border-[#DDE3E8]">
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-[#5C6B76]">Shelter Occupancy:</span>
-                            <span className="font-bold text-[#16232E]">
-                              {allocatedCount.toLocaleString()} / {usableCap.toLocaleString()}
-                            </span>
+                    <Popup>
+                      <div className="text-xs space-y-2.5 p-1 min-w-[285px]">
+                        <div className="flex items-center justify-between border-b border-[#DDE3E8] pb-1.5 bg-[#2563EB]/10 p-2 rounded -mx-1 -mt-1 mb-2">
+                          <div className="flex items-center gap-1.5">
+                            <Building2 className="w-4 h-4 text-[#2563EB]" />
+                            <span className="font-bold text-[#16232E] text-xs">{site.name}</span>
                           </div>
-                          <div className="w-full bg-[#DDE3E8] h-2.5 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all ${
-                                utilPct >= 90
-                                  ? 'bg-[#C13F3F]'
-                                  : utilPct >= 70
-                                  ? 'bg-[#D97A2E]'
-                                  : 'bg-[#3F8F5F]'
-                              }`}
-                              style={{ width: `${Math.min(100, utilPct)}%` }}
-                            />
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] text-[#5C6B76] pt-0.5">
-                            <span className="font-semibold">{utilPct}% Allocated</span>
-                            <span className="font-semibold text-[#3F8F5F]">
-                              {remainingCap.toLocaleString()} Headroom Free
-                            </span>
-                          </div>
+                          <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#2563EB] text-white shadow-xs">
+                            🔵 BLUE ZONE HAVEN
+                          </span>
                         </div>
 
-                        {/* Readiness Triad */}
-                        <div className="grid grid-cols-3 gap-1.5 mt-2 text-center text-[10px]">
-                          <div className="bg-white p-1.5 rounded border border-[#DDE3E8]">
-                            <p className="text-[#5C6B76]">Road Access</p>
-                            <p className="font-bold text-[#16232E]">{site.access_score || 8.5}/10</p>
-                          </div>
-                          <div className="bg-white p-1.5 rounded border border-[#DDE3E8]">
-                            <p className="text-[#5C6B76]">Infra Ready</p>
-                            <p className="font-bold text-[#16232E]">{site.infrastructure_score || 9.0}/10</p>
-                          </div>
-                          <div className="bg-white p-1.5 rounded border border-[#DDE3E8]">
-                            <p className="text-[#5C6B76]">Safety Index</p>
-                            <p className="font-bold text-[#3F8F5F]">
-                              {Math.round((1.0 - (site.secondary_risk_score || 0.08)) * 100)}% Safe
-                            </p>
-                          </div>
-                        </div>
+                        <div>
+                          <p className="text-[11px] text-[#5C6B76]">{site.district} District · {site.notes}</p>
 
-                        {/* Allocated inbound villages */}
-                        {site.allocated_villages && site.allocated_villages.length > 0 && (
-                          <div className="mt-2 pt-2 border-t border-[#DDE3E8]">
-                            <p className="text-[10px] font-semibold text-[#5C6B76] uppercase tracking-wider mb-1">
-                              Assigned Evacuating Villages ({site.allocated_villages.length}):
-                            </p>
-                            <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
-                              {site.allocated_villages.map((v, vi) => (
-                                <span
-                                  key={vi}
-                                  className="px-1.5 py-0.5 rounded bg-[#FFFFFF] border border-[#DDE3E8] text-[10px] text-[#16232E] font-medium"
-                                >
-                                  {v}
-                                </span>
-                              ))}
+                          {/* Blue Zone Specification Callout */}
+                          <div className="mt-2 bg-[#2563EB]/5 p-2 rounded border border-[#2563EB]/25 text-[11px] space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#5C6B76]">Zone Classification:</span>
+                              <strong className="text-[#2563EB] font-bold">BLUE ZONE (Safe Relocation Haven)</strong>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#5C6B76]">Flood Protection:</span>
+                              <strong className="text-[#3F8F5F] font-bold">Raised Above 100-Yr HFL Line</strong>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[#5C6B76]">Lifeline Readiness:</span>
+                              <span className="text-[#16232E] font-medium">Solar Microgrid, RO Water, ICU Bay, Boat Ramp</span>
                             </div>
                           </div>
-                        )}
-                      </div>
 
-                      <div className="pt-1 flex items-center gap-2">
-                        <button
-                          onClick={() => setHighlightedShelterId(isHighlighted ? null : site.site_id)}
-                          className={`flex-1 py-1.5 rounded text-[10px] font-semibold transition-colors cursor-pointer text-center ${
-                            isHighlighted
-                              ? 'bg-[#E0B33C] text-[#16232E]'
-                              : 'bg-[#16232E] hover:bg-[#3D5A73] text-white'
-                          }`}
-                        >
-                          {isHighlighted ? 'Clear Shelter Filter' : 'Filter Assigned Routes'}
-                        </button>
-                        <button
-                          onClick={() => onNavigateTab('relocation')}
-                          className="py-1.5 px-2.5 rounded bg-[#3D5A73] hover:bg-[#16232E] text-white text-[10px] font-semibold transition-colors cursor-pointer"
-                        >
-                          Roster &rarr;
-                        </button>
-                      </div>
-                    </div>
-                  </Popup>
-                </CircleMarker>
+                          {/* Capacity Meter */}
+                          <div className="mt-2 space-y-1 bg-[#EDF0F2] p-2.5 rounded border border-[#DDE3E8]">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-[#5C6B76]">Shelter Occupancy:</span>
+                              <span className="font-bold text-[#16232E]">
+                                {allocatedCount.toLocaleString()} / {usableCap.toLocaleString()} ({utilPct}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-[#DDE3E8] h-2.5 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  utilPct >= 90
+                                    ? 'bg-[#C13F3F]'
+                                    : utilPct >= 70
+                                    ? 'bg-[#D97A2E]'
+                                    : 'bg-[#2563EB]'
+                                }`}
+                                style={{ width: `${Math.min(100, utilPct)}%` }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-[#5C6B76] pt-0.5">
+                              <span className="font-semibold">{utilPct}% Allocated</span>
+                              <span className="font-semibold text-[#2563EB]">
+                                {remainingCap.toLocaleString()} Headroom Free
+                              </span>
+                            </div>
+                          </div>
 
-                {/* Inner White Dot Emblem */}
-                <CircleMarker
-                  center={[site.lat, site.lon]}
-                  radius={3.5}
-                  pathOptions={{
-                    fillColor: '#FFFFFF',
-                    fillOpacity: 1.0,
-                    color: '#16232E',
-                    weight: 1
-                  }}
-                  interactive={false}
-                />
-              </React.Fragment>
-            );
-          })}
+                          {/* Readiness Triad */}
+                          <div className="grid grid-cols-3 gap-1.5 mt-2 text-center text-[10px]">
+                            <div className="bg-white p-1.5 rounded border border-[#DDE3E8]">
+                              <p className="text-[#5C6B76]">Road/Boat Access</p>
+                              <p className="font-bold text-[#16232E]">{site.access_score || 8.5}/10</p>
+                            </div>
+                            <div className="bg-white p-1.5 rounded border border-[#DDE3E8]">
+                              <p className="text-[#5C6B76]">Infra Ready</p>
+                              <p className="font-bold text-[#16232E]">{site.infrastructure_score || 9.0}/10</p>
+                            </div>
+                            <div className="bg-white p-1.5 rounded border border-[#DDE3E8]">
+                              <p className="text-[#5C6B76]">Safety Index</p>
+                              <p className="font-bold text-[#2563EB]">
+                                {Math.round((1.0 - (site.secondary_risk_score || 0.08)) * 100)}% Safe
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Allocated inbound villages */}
+                          {site.allocated_villages && site.allocated_villages.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-[#DDE3E8]">
+                              <p className="text-[10px] font-semibold text-[#5C6B76] uppercase tracking-wider mb-1">
+                                Assigned Evacuating Villages ({site.allocated_villages.length}):
+                              </p>
+                              <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                                {site.allocated_villages.map((v, vi) => (
+                                  <span
+                                    key={vi}
+                                    className="px-1.5 py-0.5 rounded bg-[#FFFFFF] border border-[#DDE3E8] text-[10px] text-[#16232E] font-medium"
+                                  >
+                                    {v}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-1 flex items-center gap-2">
+                          <button
+                            onClick={() => setHighlightedShelterId(isHighlighted ? null : site.site_id)}
+                            className={`flex-1 py-1.5 rounded text-[10px] font-semibold transition-colors cursor-pointer text-center ${
+                              isHighlighted
+                                ? 'bg-[#E0B33C] text-[#16232E]'
+                                : 'bg-[#16232E] hover:bg-[#3D5A73] text-white'
+                            }`}
+                          >
+                            {isHighlighted ? 'Clear Shelter Filter' : 'Filter Assigned Routes'}
+                          </button>
+                          <button
+                            onClick={() => onNavigateTab('relocation')}
+                            className="py-1.5 px-2.5 rounded bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[10px] font-semibold transition-colors cursor-pointer"
+                          >
+                            Roster &rarr;
+                          </button>
+                        </div>
+                      </div>
+                    </Popup>
+                  </CircleMarker>
+
+                  {/* Inner White Dot Emblem */}
+                  <CircleMarker
+                    center={[site.lat, site.lon]}
+                    radius={4}
+                    pathOptions={{
+                      fillColor: '#FFFFFF',
+                      fillOpacity: 1.0,
+                      color: '#2563EB',
+                      weight: 1.5
+                    }}
+                    interactive={false}
+                  />
+                </React.Fragment>
+              );
+            })}
 
           {/* 3. Habitations Markers */}
           {showHabitations &&
@@ -925,10 +1002,10 @@ export default function LiveMapTab({
             {/* Shelter & Vector Legends */}
             <div className="pt-2 border-t border-[#DDE3E8] space-y-1.5">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-[#3F8F5F] border-2 border-white flex items-center justify-center shrink-0 shadow-xs">
+                <div className="w-4 h-4 rounded-full bg-[#2563EB] border-2 border-white flex items-center justify-center shrink-0 shadow-xs ring-2 ring-[#3B82F6]/50">
                   <div className="w-1.5 h-1.5 bg-white rounded-full" />
                 </div>
-                <span className="text-[#16232E] font-medium">Certified Safe Shelter</span>
+                <span className="text-[#16232E] font-semibold text-[#1D4ED8]">🔵 Blue Zone: Safe Haven</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-1 bg-[#C13F3F] shrink-0 rounded" />
